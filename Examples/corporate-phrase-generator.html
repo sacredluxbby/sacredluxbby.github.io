@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Phrase Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            font-size: 2.8em;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            letter-spacing: 12px;
+            line-height: 1.2;
+            grid-column: 1;
+            grid-row: 1 / 4;
+        }
+
+        .subtitle {
+            display: none;
+        }
+
+        .phrase-display {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(200, 200, 200, 0.05));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0;
+            position: relative;
+            overflow: hidden;
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .phrase-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .phrase-text {
+            font-size: 1.3em;
+            color: #ffffff;
+            text-align: center;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+            animation: fadeInSlide 0.6s ease-out;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 50px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            grid-column: 2;
+            grid-row: 2;
+            flex-direction: column;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #ffffff, #cccccc);
+            color: #000000;
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #333333, #000000);
+            color: white;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .copy-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .copy-feedback {
+            text-align: center;
+            color: #ffffff;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            height: 20px;
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        .phrase-counter {
+            text-align: center;
+            color: #aaaaaa;
+            font-size: 0.85em;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            grid-column: 2;
+            grid-row: 4;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                grid-template-columns: 60px 1fr;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 1.2em;
+                letter-spacing: 6px;
+            }
+
+            .phrase-text {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Boss Phrases</h1>
+        <p class="subtitle">Your daily dose of corporate wisdom</p>
+
+        <div class="phrase-display">
+            <p class="phrase-text">Click generate to see a phrase...</p>
+        </div>
+
+        <div class="button-group">
+            <button class="copy-btn" id="languageBtn">Русский</button>
+            <button class="generate-btn" id="generateBtn">Generate</button>
+            <button class="copy-btn" id="copyBtn">Copy</button>
+        </div>
+
+        <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+        <div class="phrase-counter" id="counter"></div>
+    </div>
+
+    <script>
+        const phrasesEN = [
+            "Let's circle back and touch base offline.",
+            "We need to think outside the box here.",
+            "I'm going to pivot and take this offline.",
+            "Let's synergize our core competencies.",
+            "This is a game-changer for our vertical.",
+            "We need to boil the ocean on this one.",
+            "Can we put a pin in that and move the needle?",
+            "Let's leverage our bandwidth to optimize stakeholder value.",
+            "We're going to drill down on the low-hanging fruit.",
+            "This initiative will help us reach escape velocity.",
+            "We need to activate our internal champions.",
+            "Let's create a win-win situation by rightsizing our headcount.",
+            "I want to see some blue-sky thinking on this project.",
+            "We need to incentivize going forward.",
+            "Let's do a deep dive into the weeds here.",
+            "That's a strategic initiative that will move the meter.",
+            "We need to jar loose every penny from the budget.",
+            "This meeting could have been an email, but let's make it count.",
+            "Let's socialize this idea across the organization.",
+            "We're going to take it to the next level with a swarm approach.",
+            "I'm feeling some bandwidth issues—let's reprioritize.",
+            "We need to create more value-add propositions.",
+            "That's disruptive—I love the energy!",
+            "Let's make sure we're aligned on the deliverables.",
+            "We need to work smarter, not harder, on this one.",
+            "This is a paradigm shift for us.",
+            "Let's run it up the flagpole and see who salutes.",
+            "We're going to create a best-in-class solution.",
+            "I'd like to get more granular on this.",
+            "Let's leverage this opportunity to increase market penetration.",
+            "This is a no-brainer from an ROI perspective.",
+            "We need to action this ASAP.",
+            "Let's make sure we're being proactive, not reactive.",
+            "I want to see a framework that's more scalable.",
+            "We're going to put a stake in the ground here.",
+            "That's exactly the kind of innovation we need.",
+            "Let's boil down the key takeaways.",
+            "We need to operationalize this at scale.",
+            "I'm going to need you to take point on this.",
+            "Let's circle the wagons and stay focused.",
+            "This is a strategic priority for Q3.",
+            "We need to better articulate our value proposition.",
+            "Drop the ball and let's shuffle the deck.",
+            "Let's make that our north star going forward."
+        ];
+
+        const phrasesRU = [
+            "Давайте еще раз вернемся к этому и обсудим офлайн.",
+            "Нам нужно выйти за пределы привычного мышления.",
+            "Я собираюсь изменить стратегию и обсудить это отдельно.",
+            "Давайте синергизируем наши основные компетенции.",
+            "Это переломный момент для нашего направления.",
+            "Нам нужно вскипятить океан на этот раз.",
+            "Можем ли мы отложить это и продвинуть стрелку вперед?",
+            "Давайте используем нашу пропускную способность для оптимизации стоимости.",
+            "Мы собираемся углубиться в мелкие детали.",
+            "Эта инициатива поможет нам достичь новых высот.",
+            "Нам нужно активировать наших внутренних сторонников.",
+            "Давайте создадим выигрышную ситуацию через оптимизацию штата.",
+            "Я хотел бы увидеть более творческого подхода.",
+            "Нам нужно стимулировать дальнейший прогресс.",
+            "Давайте проведем глубокий анализ деталей.",
+            "Это стратегическая инициатива, которая изменит показатели.",
+            "Нам нужно выжать каждый цент из бюджета.",
+            "Эта встреча могла быть письмом, но давайте сделаем результат.",
+            "Давайте распространим эту идею по всей организации.",
+            "Мы возьмемся за это всей командой.",
+            "Я чувствую, что у нас проблемы с ресурсами.",
+            "Нам нужно создавать больше ценностей.",
+            "Это разрушительно—мне нравится эта энергия!",
+            "Давайте убедимся, что мы все согласны.",
+            "Нам нужно работать умнее, а не усерднее.",
+            "Это парадигматический сдвиг для нас.",
+            "Давайте проверим это на высшем уровне.",
+            "Мы создадим лучшее в своем классе решение.",
+            "Я хотел бы получить более детальную информацию.",
+            "Давайте используем эту возможность для расширения рынка.",
+            "Это очевидно с точки зрения окупаемости инвестиций.",
+            "Нам нужно действовать немедленно.",
+            "Давайте будем активными, а не реактивными.",
+            "Я хочу видеть более масштабируемую систему.",
+            "Мы закрепим нашу позицию здесь.",
+            "Это именно то инновационное решение, которое нам нужно.",
+            "Давайте обобщим основные выводы.",
+            "Нам нужно масштабировать эту операцию.",
+            "Я буду нуждаться в вас на передовой.",
+            "Давайте сплотимся и сосредоточимся.",
+            "Это стратегический приоритет на Q3.",
+            "Нам нужно лучше объяснить нашу ценность.",
+            "Давайте перемешаем колоду.",
+            "Давайте сделаем это нашим главным направлением."
+        ];
+
+        const phrasesET = [
+            "Lähme tagasi ja arutleme seda offline.",
+            "Peame väljuma kastist välja.",
+            "Võtan strateegia ümber ja arutlen seda eraldi.",
+            "Ühendame oma põhioskused.",
+            "See on muutuja meie valdkonnas.",
+            "Peame okeani üle keema.",
+            "Kas saame selle parkida ja survet suurendada?",
+            "Kasutame oma võimsust väärtuse optimeerimiseks.",
+            "Taandume detailidesse.",
+            "See algatus aitab meil uutele kõrgustele jõuda.",
+            "Peame aktiveerima oma sisemist toetajat.",
+            "Loome võidu-võidu olukorra optimeerimise kaudu.",
+            "Tahaks näha loovat lähenemist.",
+            "Peame stimuleerima edasist arengut.",
+            "Teeme põhjalikku analüüsi.",
+            "See on strateegiline algatused, mis muudab näitajaid.",
+            "Peame väljapressima iga sendi eelarves.",
+            "See koosoleku võinuks olla kiri, aga teeme tulemuse.",
+            "Levitame seda ideega kogu organisatsioonile.",
+            "Võtame selle terve meeskonnaga käsile.",
+            "Tunnen, et meil on ressursside probleemid.",
+            "Peame looma rohkem väärtust.",
+            "See on häiriv - mulle meeldib see energia!",
+            "Veendume, et oleme kõik nõus.",
+            "Peame töötama nutikamalt, mitte kõvemalt.",
+            "See on paradigmaatiline muutus meile.",
+            "Kontrollime seda kõrgeimal tasandil.",
+            "Loome parima klassi lahenduse.",
+            "Tahaks rohkem detailidest teada.",
+            "Kasutame seda võimalust turul laiendamiseks.",
+            "See on ilmne investeeringute tasuvuse seisukohast.",
+            "Peame kohe tegutsema.",
+            "Oleme aktiivsed, mitte reaktiivsed.",
+            "Tahan näha paremini mastaabitud süsteemi.",
+            "Tugevdame oma positsiooni siin.",
+            "See on täpselt see innovatiivne lahendus, mida vajame.",
+            "Koondame peamised leivased.",
+            "Peame skaleerima seda operatsiooni.",
+            "Vajalik teil olla esirindel.",
+            "Konsolideerime ja fokusseerime.",
+            "See on strateegiline prioriteet Q3 jaoks.",
+            "Peame paremini selgitama oma väärtust.",
+            "Segame kaarte.",
+            "Teeme seda meie põhisuunaks."
+        ];
+
+        let currentPhrase = '';
+        let currentPhraseIndex = 0;
+        let generatedCount = 0;
+        let currentLanguage = 'ru';
+        const languages = { ru: phrasesRU, en: phrasesEN, et: phrasesET };
+        const languageNames = { ru: 'Русский', en: 'English', et: 'Eesti' };
+
+        const phraseText = document.querySelector('.phrase-text');
+        const generateBtn = document.getElementById('generateBtn');
+        const languageBtn = document.getElementById('languageBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyFeedback = document.getElementById('copyFeedback');
+        const counter = document.getElementById('counter');
+
+        function getRandomPhraseIndex() {
+            return Math.floor(Math.random() * languages[currentLanguage].length);
+        }
+
+        function getPhraseByIndex(index) {
+            return languages[currentLanguage][index];
+        }
+
+        function displayPhrase() {
+            currentPhraseIndex = getRandomPhraseIndex();
+            currentPhrase = getPhraseByIndex(currentPhraseIndex);
+            phraseText.textContent = `"${currentPhrase}"`;
+            generatedCount++;
+            updateCounter();
+        }
+
+        function updateCounter() {
+            counter.textContent = `Generated: ${generatedCount} phrases`;
+        }
+
+        function copyToClipboard() {
+            if (currentPhrase) {
+                navigator.clipboard.writeText(currentPhrase).then(() => {
+                    copyFeedback.classList.add('show');
+                    setTimeout(() => {
+                        copyFeedback.classList.remove('show');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            }
+        }
+
+        function switchLanguage() {
+            const languages_order = ['ru', 'en', 'et'];
+            const currentIndex = languages_order.indexOf(currentLanguage);
+            currentLanguage = languages_order[(currentIndex + 1) % languages_order.length];
+            languageBtn.textContent = languageNames[currentLanguage];
+            // Only change the language of the current phrase, don't generate a new one
+            currentPhrase = getPhraseByIndex(currentPhraseIndex);
+            phraseText.textContent = `"${currentPhrase}"`;
+        }
+
+        generateBtn.addEventListener('click', displayPhrase);
+        languageBtn.addEventListener('click', switchLanguage);
+        copyBtn.addEventListener('click', copyToClipboard);
+
+        // Generate an initial phrase on load
+        displayPhrase();
+    </script>
+</body>
+</html>
