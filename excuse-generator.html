@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programming Excuse Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', 'Impact', sans-serif;
+            background: linear-gradient(135deg, #0F0F0F 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            background: #000;
+            border: 4px solid #00ff00;
+            border-radius: 10px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3), inset 0 0 20px rgba(0, 255, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            }
+            50% {
+                text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00, 0 0 40px #00ff00;
+            }
+        }
+
+        .excuse-box {
+            background: #111;
+            border: 3px dashed #ff00ff;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .excuse-text {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            line-height: 1.4;
+            animation: fadeInText 0.8s ease-out;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeInText {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typeWriter {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: 'Arial Black', 'Impact', sans-serif;
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: 3px solid #00ff00;
+            background: #00ff00;
+            color: #000;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        button:hover {
+            background: #00ff00;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+            text-shadow: 0 0 5px #000;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .copy-btn {
+            border-color: #ff00ff;
+            background: #ff00ff;
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+
+        .copy-btn:hover {
+            background: #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+
+        .feedback {
+            color: #00ff00;
+            font-size: 0.9em;
+            margin-top: 10px;
+            height: 20px;
+            animation: fadeInOut 1.5s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .excuse-text {
+                font-size: 1.3em;
+            }
+
+            button {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💻 EXCUSE GENERATOR 💻</h1>
+        
+        <div class="excuse-box">
+            <div class="excuse-text" id="excuseText">Click "Generate" to create an excuse!</div>
+        </div>
+
+        <div class="button-group">
+            <button id="generateBtn">Generate Excuse</button>
+            <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="footer">
+            <p>⚡ Why your code isn't working ⚡</p>
+        </div>
+    </div>
+
+    <script>
+        // Excuse parts arrays
+        const starters = [
+            "I can't deploy because",
+            "The bug exists because",
+            "My code doesn't work because",
+            "The server crashed because",
+            "I missed the deadline because",
+            "This feature is broken because",
+            "My tests are failing because",
+            "The API is down because",
+            "My laptop exploded because",
+            "The database got corrupted because",
+            "My IDE won't start because",
+            "Git lost all my commits because"
+        ];
+
+        const middles = [
+            "a rogue semicolon",
+            "a sentient rubber duck",
+            "quantum fluctuations in the code",
+            "my code caught a virus",
+            "the WiFi is powered by hamsters",
+            "Stack Overflow is being used as a fortune teller",
+            "a time-traveling bug from the future",
+            "my coffee made a decision to become water",
+            "the JavaScript gods demanded a sacrifice",
+            "a gremlins' convention in my RAM",
+            "a mysterious cosmic ray",
+            "the intern pushed to main again",
+            "ChatGPT wrote the wrong answer",
+            "my keyboard is on strike",
+            "the moon is in retrograde",
+            "a ghost in the machine",
+            "my Windows Update needs an update",
+            "the <div> decided to unionize"
+        ];
+
+        const endings = [
+            "and now nothing makes sense anymore.",
+            "and I've accepted my fate.",
+            "and I'm not sure who's to blame.",
+            "and I've decided to become a farmer.",
+            "and honestly, I don't understand it either.",
+            "and the code has achieved sentience.",
+            "and I'm now living in the server room.",
+            "and physics no longer applies.",
+            "and I've made my peace with it.",
+            "and I can't look my team in the eye.",
+            "and I've started a support group.",
+            "and the error message just says 'lol'.",
+            "and now I smell burnt electronics.",
+            "and we're switching to COBOL.",
+            "and I'm updating my resume."
+        ];
+
+        const excuseText = document.getElementById('excuseText');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const feedback = document.getElementById('feedback');
+
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function generateExcuse() {
+            const starter = getRandomElement(starters);
+            const middle = getRandomElement(middles);
+            const ending = getRandomElement(endings);
+
+            const excuse = `${starter} ${middle} ${ending}`;
+            
+            // Reset animation by removing and re-adding class
+            excuseText.style.animation = 'none';
+            
+            setTimeout(() => {
+                excuseText.textContent = excuse;
+                excuseText.style.animation = '';
+            }, 10);
+
+            hideFeedback();
+        }
+
+        function copyToClipboard() {
+            const text = excuseText.textContent;
+            
+            if (text === "Click \"Generate\" to create an excuse!") {
+                showFeedback("Generate an excuse first!");
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showFeedback("✓ Copied to clipboard!");
+            }).catch(() => {
+                showFeedback("Failed to copy :(");
+            });
+        }
+
+        function showFeedback(message) {
+            feedback.textContent = message;
+            feedback.classList.remove('hidden');
+        }
+
+        function hideFeedback() {
+            feedback.classList.add('hidden');
+        }
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateExcuse);
+        copyBtn.addEventListener('click', copyToClipboard);
+
+        // Generate initial excuse on page load
+        window.addEventListener('load', generateExcuse);
+    </script>
+</body>
+</html>
