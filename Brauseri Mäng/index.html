@@ -30,6 +30,28 @@
         const PLAYER_SIZE = 20;
         // speed in pixels per second
         const PLAYER_SPEED = 200;
+        const ENEMY_RADIUS = 10;
+        const ENEMY_SPEED = 100;
+
+        // helper: spawn enemy at random edge
+        function spawnEnemy() {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if (edge === 0) { // top
+                x = Math.random() * CANVAS_WIDTH;
+                y = -ENEMY_RADIUS;
+            } else if (edge === 1) { // bottom
+                x = Math.random() * CANVAS_WIDTH;
+                y = CANVAS_HEIGHT + ENEMY_RADIUS;
+            } else if (edge === 2) { // left
+                x = -ENEMY_RADIUS;
+                y = Math.random() * CANVAS_HEIGHT;
+            } else { // right
+                x = CANVAS_WIDTH + ENEMY_RADIUS;
+                y = Math.random() * CANVAS_HEIGHT;
+            }
+            return { x, y, color: 'red' };
+        }
 
         // state
         const state = {
@@ -38,6 +60,7 @@
                 y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2,
                 color: 'green'
             },
+            enemy: spawnEnemy(),
             keysPressed: {}  // map for smooth movement
         };
 
@@ -68,6 +91,18 @@
             // clamp to bounds
             state.player.x = Math.max(0, Math.min(CANVAS_WIDTH - PLAYER_SIZE, state.player.x));
             state.player.y = Math.max(0, Math.min(CANVAS_HEIGHT - PLAYER_SIZE, state.player.y));
+
+            // move enemy toward player
+            const dx = state.player.x + PLAYER_SIZE / 2 - state.enemy.x;
+            const dy = state.player.y + PLAYER_SIZE / 2 - state.enemy.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > 0) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+                state.enemy.x += nx * ENEMY_SPEED * deltaTime;
+                state.enemy.y += ny * ENEMY_SPEED * deltaTime;
+            }
         }
 
         function draw() {
@@ -77,6 +112,12 @@
             // draw player
             ctx.fillStyle = state.player.color;
             ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
+
+            // draw enemy (red circle)
+            ctx.fillStyle = state.enemy.color;
+            ctx.beginPath();
+            ctx.arc(state.enemy.x, state.enemy.y, ENEMY_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         let lastTimestamp = 0;
