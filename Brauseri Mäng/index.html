@@ -28,7 +28,8 @@
         const CANVAS_WIDTH = 800;
         const CANVAS_HEIGHT = 600;
         const PLAYER_SIZE = 20;
-        const PLAYER_SPEED = 2;
+        // speed in pixels per second
+        const PLAYER_SPEED = 200;
 
         // state
         const state = {
@@ -36,15 +37,37 @@
                 x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2,
                 y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2,
                 color: 'green'
-            }
+            },
+            keysPressed: {}  // map for smooth movement
         };
 
         // setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        function update() {
-            // placeholder for future logic (movement, collisions, etc.)
+        function update(deltaTime) {
+            // calculate velocity based on keys
+            let vx = 0;
+            let vy = 0;
+            if (state.keysPressed['ArrowUp'] || state.keysPressed['w'] || state.keysPressed['W']) vy -= 1;
+            if (state.keysPressed['ArrowDown'] || state.keysPressed['s'] || state.keysPressed['S']) vy += 1;
+            if (state.keysPressed['ArrowLeft'] || state.keysPressed['a'] || state.keysPressed['A']) vx -= 1;
+            if (state.keysPressed['ArrowRight'] || state.keysPressed['d'] || state.keysPressed['D']) vx += 1;
+
+            // normalize diagonal movement
+            if (vx !== 0 && vy !== 0) {
+                const inv = 1 / Math.sqrt(2);
+                vx *= inv;
+                vy *= inv;
+            }
+
+            // apply speed and deltaTime (deltaTime in seconds)
+            state.player.x += vx * PLAYER_SPEED * deltaTime;
+            state.player.y += vy * PLAYER_SPEED * deltaTime;
+
+            // clamp to bounds
+            state.player.x = Math.max(0, Math.min(CANVAS_WIDTH - PLAYER_SIZE, state.player.x));
+            state.player.y = Math.max(0, Math.min(CANVAS_HEIGHT - PLAYER_SIZE, state.player.y));
         }
 
         function draw() {
@@ -56,11 +79,24 @@
             ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
         }
 
-        function loop() {
-            update();
+        let lastTimestamp = 0;
+        function loop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const delta = (timestamp - lastTimestamp) / 1000; // convert ms to seconds
+            lastTimestamp = timestamp;
+
+            update(delta);
             draw();
             requestAnimationFrame(loop);
         }
+
+        // input listeners
+        window.addEventListener('keydown', e => {
+            state.keysPressed[e.key] = true;
+        });
+        window.addEventListener('keyup', e => {
+            state.keysPressed[e.key] = false;
+        });
 
         // start game
         requestAnimationFrame(loop);
