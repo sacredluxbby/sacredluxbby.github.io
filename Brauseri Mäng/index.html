@@ -61,6 +61,7 @@
                 color: 'green'
             },
             enemy: spawnEnemy(),
+            gameOver: false,
             keysPressed: {}  // map for smooth movement
         };
 
@@ -68,7 +69,36 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // collision detection: circle vs rectangle
+        function checkCollision() {
+            // treat player as circle at center for simplicity
+            const playerCenterX = state.player.x + PLAYER_SIZE / 2;
+            const playerCenterY = state.player.y + PLAYER_SIZE / 2;
+            const playerHalfSize = PLAYER_SIZE / 2;
+
+            // find closest point on player rect to enemy circle center
+            const closestX = Math.max(state.player.x, Math.min(state.enemy.x, state.player.x + PLAYER_SIZE));
+            const closestY = Math.max(state.player.y, Math.min(state.enemy.y, state.player.y + PLAYER_SIZE));
+
+            // distance between circle center and closest point on rect
+            const dx = state.enemy.x - closestX;
+            const dy = state.enemy.y - closestY;
+            const distSquared = dx * dx + dy * dy;
+
+            return distSquared < ENEMY_RADIUS * ENEMY_RADIUS;
+        }
+
+        function restart() {
+            state.player.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
+            state.player.y = CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2;
+            state.enemy = spawnEnemy();
+            state.gameOver = false;
+            state.keysPressed = {};
+        }
+
         function update(deltaTime) {
+            if (state.gameOver) return;  // stop updating if game over
+
             // calculate velocity based on keys
             let vx = 0;
             let vy = 0;
@@ -103,6 +133,11 @@
                 state.enemy.x += nx * ENEMY_SPEED * deltaTime;
                 state.enemy.y += ny * ENEMY_SPEED * deltaTime;
             }
+
+            // check collision
+            if (checkCollision()) {
+                state.gameOver = true;
+            }
         }
 
         function draw() {
@@ -118,6 +153,23 @@
             ctx.beginPath();
             ctx.arc(state.enemy.x, state.enemy.y, ENEMY_RADIUS, 0, Math.PI * 2);
             ctx.fill();
+
+            // draw game over screen
+            if (state.gameOver) {
+                // semi-transparent overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                // "GAME OVER" text
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
+
+                // restart instruction
+                ctx.font = '20px Arial';
+                ctx.fillText('Press R to restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+            }
         }
 
         let lastTimestamp = 0;
@@ -133,7 +185,11 @@
 
         // input listeners
         window.addEventListener('keydown', e => {
-            state.keysPressed[e.key] = true;
+            if (e.key.toLowerCase() === 'r') {
+                restart();
+            } else {
+                state.keysPressed[e.key] = true;
+            }
         });
         window.addEventListener('keyup', e => {
             state.keysPressed[e.key] = false;
