@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Dancing Script', cursive;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(244, 67, 54, 0.2);
+            padding: 30px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #c2185b;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #ec407a;
+            font-size: 24px;
+            font-family: 'Dancing Script', cursive;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .color-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .color-btn {
+            width: 70px;
+            height: 70px;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-btn.active {
+            border-color: #880e4f;
+            box-shadow: 0 6px 16px rgba(136, 14, 79, 0.4);
+            transform: scale(1.08);
+        }
+
+        .canvas-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 30px;
+            padding: 15px 20px;
+            background: #fce4ec;
+            border-radius: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* tools row layout */
+        .tool-group.tools {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .tool-group.tools .tool-btn {
+            margin-right: 10px;
+        }
+
+        .tool-group label {
+            color: #c2185b;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .color-palette {
+            display: none;
+        }
+
+        .palette-btns-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .palette-btn {
+            background: linear-gradient(135deg, #ff7fa0 0%, #ff5e78 100%);
+            color: white;
+            border: 2px solid transparent;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .palette-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 94, 120, 0.4);
+        }
+
+        .palette-btn.active {
+            border-color: #880e4f;
+            box-shadow: 0 6px 16px rgba(136, 14, 79, 0.5);
+            transform: scale(1.05);
+        }
+
+        .color-1 { background-color: #ffb3ba; }
+        .color-2 { background-color: #ff99ac; }
+        .color-3 { background-color: #ff7fa0; }
+        .color-4 { background-color: #ff5e78; }
+        .color-5 { background-color: #f50057; }
+        .color-6 { background-color: #c51162; }
+        .color-7 { background-color: #880e4f; }
+        .color-8 { background-color: #000000; }
+        .color-9 { background-color: #666666; }
+        .color-10 { background-color: #ffffff; border: 2px solid #ddd; }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-group label {
+            color: #c2185b;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            height: 6px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #ffb3ba, #ff5e78);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #c2185b;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #c2185b;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .size-display {
+            color: #c2185b;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .tool-btn {
+            background: linear-gradient(135deg, #ff7fa0 0%, #ff5e78 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 94, 120, 0.4);
+        }
+
+        .tool-btn:active {
+            transform: translateY(0);
+        }
+
+        .tool-btn.active {
+            background: linear-gradient(135deg, #f50057 0%, #c51162 100%);
+        }
+
+        .canvas-wrapper {
+            background: white;
+            border-radius: 15px;
+            /* thin solid border */
+            border: 1px solid #ec407a;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px; /* small gap under canvas */
+            display: flex;
+            justify-content: center;
+        }
+        /* other options kept for reference:
+           1. Solid bold: border: 5px solid #c2185b;
+           2. Groove style: border: 4px groove #ffb3ba;
+           3. Dotted minimal: border: 2px dotted #ec407a;
+           4. Glowing outline: border: 2px solid transparent; box-shadow: 0 0 20px #f50057;
+           5. Rounded gradient: use background-clip + padding for gradient frame
+        */
+
+        canvas {
+            display: block;
+            background: #fff5f7;
+            border-radius: 12px;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .save-btn, .clear-btn, .undo-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .undo-btn {
+            background: linear-gradient(135deg, #f8bbd0 0%, #ff99ac 100%);
+            color: #880e4f;
+        }
+
+        .undo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .undo-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 153, 172, 0.4);
+        }
+
+        /* gallery styling */
+        .gallery {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .gallery-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .gallery-item img {
+            max-width: calc(100% - 50px);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f8bbd0 0%, #ff99ac 100%);
+            color: #880e4f;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 153, 172, 0.4);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #ff7fa0 0%, #ff5e78 100%);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 94, 120, 0.4);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #f8bbd0 0%, #ff99ac 100%);
+            color: #880e4f;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 153, 172, 0.4);
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .color-sidebar {
+                width: 100%;
+                flex-direction: row;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .color-btn {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .save-btn, .clear-btn {
+                width: 100%;
+            }
+
+            .color-btn {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Drawing App</h1>
+            <p>Create beautiful artwork with your mouse or touch</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="tool-group">
+                <label>Palettes</label>
+                <div class="palette-btns-container">
+                    <button class="palette-btn active" data-palette="pink">🌸</button>
+                    <button class="palette-btn" data-palette="blue">🌊</button>
+                    <button class="palette-btn" data-palette="purple">💜</button>
+                    <button class="palette-btn" data-palette="green">🌿</button>
+                    <button class="palette-btn" data-palette="orange">🧡</button>
+                    <button class="palette-btn" data-palette="yellow">💛</button>
+                    <button class="palette-btn" data-palette="red">❤️</button>
+                    <button class="palette-btn" data-palette="skyblue">💙</button>
+                    <button class="palette-btn" data-palette="brown">🟤</button>
+                    <button class="palette-btn" data-palette="grayscale">⚫⚪</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <label>Brush Size</label>
+                <div class="slider-container">
+                    <input type="range" id="brushSize" min="1" max="50" value="5">
+                    <span class="size-display" id="sizeDisplay">5</span>
+                </div>
+            </div>
+
+            <div class="tool-group tools">
+                <label>Tools</label>
+                <button class="tool-btn" id="sprayBtn">Spray</button>
+                <button class="tool-btn" id="pencilBtn">Pencil</button>
+                <button class="tool-btn" id="eraserBtn">Eraser</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="color-sidebar" id="colorPalette">
+                <button class="color-btn color-1 active" data-color="#ffb3ba"></button>
+                <button class="color-btn color-2" data-color="#ff99ac"></button>
+                <button class="color-btn color-3" data-color="#ff7fa0"></button>
+                <button class="color-btn color-4" data-color="#ff5e78"></button>
+                <button class="color-btn color-5" data-color="#f50057"></button>
+                <button class="color-btn color-6" data-color="#c51162"></button>
+                <button class="color-btn color-7" data-color="#880e4f"></button>
+                <button class="color-btn color-8" data-color="#000000"></button>
+                <button class="color-btn color-9" data-color="#666666"></button>
+                <button class="color-btn color-10" data-color="#ffffff"></button>
+            </div>
+
+            <div class="canvas-content">
+
+        <div class="canvas-wrapper">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+
+        <div class="action-buttons">
+            <button class="undo-btn" id="undoBtn" disabled>Undo</button>
+            <button class="save-btn" id="saveBtn">Save</button>
+            <button class="save-btn" id="savePngBtn">💾 Save PNG</button>
+            <button class="clear-btn" id="clearBtn">Clear Canvas</button>
+        </div>
+        <!-- gallery of saved images -->
+        <div class="gallery" id="gallery"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPaletteContainer = document.getElementById('colorPalette');
+        const paletteBtns = document.querySelectorAll('.palette-btn');
+        const brushSizeInput = document.getElementById('brushSize');
+        const sizeDisplay = document.getElementById('sizeDisplay');
+        const sprayBtn = document.getElementById('sprayBtn');
+        const pencilBtn = document.getElementById('pencilBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const savePngBtn = document.getElementById('savePngBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const gallery = document.getElementById('gallery');
+
+        let isDrawing = false;
+        let isErasing = false;
+        let currentColor = '#ffb3ba';
+        let brushSize = 5;
+        let lastX = 0;
+        let lastY = 0;
+        let currentTool = 'brush'; // brush, pencil, spray, eraser
+        const undoStack = [];
+        const maxUndo = 20;
+
+        // Color palettes mapped by base color
+        const colorPalettes = {
+            pink: [
+                { color: '#ffb3ba', name: 'Light Pink' },
+                { color: '#ff99ac', name: 'Soft Pink' },
+                { color: '#ff7fa0', name: 'Pink' },
+                { color: '#ff5e78', name: 'Medium Pink' },
+                { color: '#f50057', name: 'Vivid Pink' },
+                { color: '#c51162', name: 'Deep Pink' },
+                { color: '#880e4f', name: 'Dark Pink' },
+                { color: '#1a1a1a', name: 'Very Dark' },
+                { color: '#330000', name: 'Darkest Pink' }
+            ],
+            blue: [
+                { color: '#b3e5fc', name: 'Light Blue' },
+                { color: '#81d4fa', name: 'Soft Blue' },
+                { color: '#4fc3f7', name: 'Blue' },
+                { color: '#29b6f6', name: 'Medium Blue' },
+                { color: '#03a9f4', name: 'Vivid Blue' },
+                { color: '#039be5', name: 'Deep Blue' },
+                { color: '#0277bd', name: 'Dark Blue' },
+                { color: '#01579b', name: 'Very Dark Blue' },
+                { color: '#000d33', name: 'Darkest Blue' }
+            ],
+            purple: [
+                { color: '#e1bee7', name: 'Light Purple' },
+                { color: '#ce93d8', name: 'Soft Purple' },
+                { color: '#ba68c8', name: 'Purple' },
+                { color: '#ab47bc', name: 'Medium Purple' },
+                { color: '#9c27b0', name: 'Vivid Purple' },
+                { color: '#7b1fa2', name: 'Deep Purple' },
+                { color: '#6a0dad', name: 'Dark Purple' },
+                { color: '#4a148c', name: 'Very Dark Purple' },
+                { color: '#1a0033', name: 'Darkest Purple' }
+            ],
+            green: [
+                { color: '#c8e6c9', name: 'Light Green' },
+                { color: '#a5d6a7', name: 'Soft Green' },
+                { color: '#81c784', name: 'Green' },
+                { color: '#66bb6a', name: 'Medium Green' },
+                { color: '#4caf50', name: 'Vivid Green' },
+                { color: '#388e3c', name: 'Deep Green' },
+                { color: '#2e7d32', name: 'Dark Green' },
+                { color: '#1b5e20', name: 'Very Dark Green' },
+                { color: '#0d3317', name: 'Darkest Green' }
+            ],
+            orange: [
+                { color: '#ffe0b2', name: 'Light Orange' },
+                { color: '#ffcc80', name: 'Soft Orange' },
+                { color: '#ffb74d', name: 'Orange' },
+                { color: '#ffa726', name: 'Medium Orange' },
+                { color: '#ff9800', name: 'Vivid Orange' },
+                { color: '#f57c00', name: 'Deep Orange' },
+                { color: '#e65100', name: 'Dark Orange' },
+                { color: '#bf360c', name: 'Very Dark Orange' },
+                { color: '#660000', name: 'Darkest Orange' }
+            ],
+            yellow: [
+                { color: '#fff9c4', name: 'Light Yellow' },
+                { color: '#fff59d', name: 'Soft Yellow' },
+                { color: '#fff176', name: 'Yellow' },
+                { color: '#ffee58', name: 'Medium Yellow' },
+                { color: '#ffeb3b', name: 'Vivid Yellow' },
+                { color: '#fbc02d', name: 'Deep Yellow' },
+                { color: '#f9a825', name: 'Dark Yellow' },
+                { color: '#f57f17', name: 'Very Dark Yellow' },
+                { color: '#664400', name: 'Darkest Yellow' }
+            ],
+            red: [
+                { color: '#ffcdd2', name: 'Light Red' },
+                { color: '#ef9a9a', name: 'Soft Red' },
+                { color: '#e57373', name: 'Red' },
+                { color: '#ef5350', name: 'Medium Red' },
+                { color: '#f44336', name: 'Vivid Red' },
+                { color: '#e53935', name: 'Deep Red' },
+                { color: '#c62828', name: 'Dark Red' },
+                { color: '#b71c1c', name: 'Very Dark Red' },
+                { color: '#660000', name: 'Darkest Red' }
+            ],
+            skyblue: [
+                { color: '#e0f2f1', name: 'Light Sky Blue' },
+                { color: '#b2dfdb', name: 'Soft Sky Blue' },
+                { color: '#80cbc4', name: 'Sky Blue' },
+                { color: '#4db8ac', name: 'Medium Sky Blue' },
+                { color: '#26a69a', name: 'Vivid Sky Blue' },
+                { color: '#00897b', name: 'Deep Sky Blue' },
+                { color: '#00695c', name: 'Dark Sky Blue' },
+                { color: '#004d40', name: 'Very Dark Sky Blue' },
+                { color: '#001a17', name: 'Darkest Sky Blue' }
+            ],
+            brown: [
+                { color: '#d7ccc8', name: 'Light Brown' },
+                { color: '#bcaaa4', name: 'Soft Brown' },
+                { color: '#a1887f', name: 'Brown' },
+                { color: '#8d6e63', name: 'Medium Brown' },
+                { color: '#795548', name: 'Vivid Brown' },
+                { color: '#6d4c41', name: 'Deep Brown' },
+                { color: '#5d4037', name: 'Dark Brown' },
+                { color: '#4e342e', name: 'Very Dark Brown' },
+                { color: '#33241a', name: 'Darkest Brown' }
+            ],
+            grayscale: [
+                { color: '#ffffff', name: 'White' },
+                { color: '#eeeeee', name: 'Light Gray 1' },
+                { color: '#dddddd', name: 'Light Gray 2' },
+                { color: '#cccccc', name: 'Light Gray 3' },
+                { color: '#999999', name: 'Medium Gray' },
+                { color: '#666666', name: 'Dark Gray 1' },
+                { color: '#444444', name: 'Dark Gray 2' },
+                { color: '#333333', name: 'Dark Gray 3' },
+                { color: '#1a1a1a', name: 'Very Dark' }
+            ]
+        };
+
+        // Update color palette display
+        function updateColorPalette(paletteKey) {
+            const palette = colorPalettes[paletteKey];
+            colorPaletteContainer.innerHTML = '';
+            
+            palette.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'color-btn' + (index === 0 ? ' active' : '');
+                btn.setAttribute('data-color', item.color);
+                btn.style.backgroundColor = item.color;
+                if (item.border) {
+                    btn.style.border = '2px solid #ddd';
+                }
+                btn.addEventListener('click', selectColor);
+                colorPaletteContainer.appendChild(btn);
+            });
+            
+            currentColor = palette[0].color;
+            isErasing = false;
+            eraserBtn.classList.remove('active');
+        }
+
+        // Color selection handler
+        function selectColor(e) {
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentColor = e.target.getAttribute('data-color');
+            isErasing = false;
+            eraserBtn.classList.remove('active');
+        }
+
+        // Palette selection
+        paletteBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                paletteBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const paletteKey = this.getAttribute('data-palette');
+                updateColorPalette(paletteKey);
+            });
+        });
+
+        // Brush size control
+        brushSizeInput.addEventListener('input', function() {
+            brushSize = this.value;
+            sizeDisplay.textContent = brushSize;
+        });
+
+        // Tool buttons handling
+        const toolButtons = [sprayBtn, pencilBtn, eraserBtn];
+
+        sprayBtn.addEventListener('click', function() {
+            currentTool = 'spray';
+            isErasing = false;
+            toolButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+
+        pencilBtn.addEventListener('click', function() {
+            currentTool = 'pencil';
+            isErasing = false;
+            toolButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+
+        eraserBtn.addEventListener('click', function() {
+            currentTool = 'eraser';
+            isErasing = !isErasing;
+            toolButtons.forEach(b => b.classList.remove('active'));
+            this.classList.toggle('active');
+            if (isErasing) {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            }
+        });
+
+        // Drawing functions
+        function pushState() {
+            if (undoStack.length >= maxUndo) {
+                undoStack.shift();
+            }
+            undoStack.push(canvas.toDataURL());
+            undoBtn.disabled = false;
+        }
+
+        function startDrawing(e) {
+            // save current image before beginning new stroke
+            pushState();
+
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            if (e.touches) {
+                lastX = (e.touches[0].clientX - rect.left) * scaleX;
+                lastY = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                lastX = (e.clientX - rect.left) * scaleX;
+                lastY = (e.clientY - rect.top) * scaleY;
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let x, y;
+            if (e.touches) {
+                x = (e.touches[0].clientX - rect.left) * scaleX;
+                y = (e.touches[0].clientY - rect.top) * scaleY;
+            } else {
+                x = (e.clientX - rect.left) * scaleX;
+                y = (e.clientY - rect.top) * scaleY;
+            }
+
+            if (currentTool === 'spray') {
+                sprayEffect(x, y);
+            } else {
+                ctx.lineWidth = brushSize;
+                if (currentTool === 'pencil') {
+                    ctx.lineWidth = Math.max(1, brushSize / 2);
+                    ctx.lineCap = 'butt';
+                } else {
+                    ctx.lineCap = 'round';
+                }
+                ctx.strokeStyle = isErasing ? '#fff5f7' : currentColor;
+                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
+
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            lastX = x;
+            lastY = y;
+        }
+        
+        // spray can effect
+        function sprayEffect(x, y) {
+            const density = 30;
+            for (let i = 0; i < density; i++) {
+                const offsetX = (Math.random() * 2 - 1) * brushSize * 2;
+                const offsetY = (Math.random() * 2 - 1) * brushSize * 2;
+                ctx.fillStyle = currentColor;
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillRect(x + offsetX, y + offsetY, 1, 1);
+            }
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // Set canvas size
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = Math.min(1200, rect.width - 20);
+            canvas.height = 750;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // Undo functionality
+        undoBtn.addEventListener('click', function() {
+            if (undoStack.length > 0) {
+                const dataURL = undoStack.pop();
+                const img = new Image();
+                img.src = dataURL;
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+            if (undoStack.length === 0) {
+                undoBtn.disabled = true;
+            }
+        });
+
+        // Save drawing to gallery only
+        saveBtn.addEventListener('click', function() {
+            const dataURL = canvas.toDataURL();
+            // create gallery item container
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            
+            // create image
+            const img = document.createElement('img');
+            img.src = dataURL;
+            
+            // create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', function() {
+                item.remove();
+            });
+            
+            // add image and delete button to container
+            item.appendChild(img);
+            item.appendChild(deleteBtn);
+            
+            // add to gallery
+            gallery.appendChild(item);
+            
+            // scroll to bottom of gallery
+            gallery.scrollTop = gallery.scrollHeight;
+        });
+
+        // Save as PNG file
+        savePngBtn.addEventListener('click', function() {
+            const link = document.createElement('a');
+            link.download = 'my_drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        // Clear canvas
+        clearBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the canvas? This cannot be undone.')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+    </script>
+</body>
+</html>
