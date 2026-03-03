@@ -32,6 +32,9 @@
         const PLAYER_SPEED = 200;
         const ENEMY_RADIUS = 10;
         const ENEMY_SPEED = 100;
+        const SPAWN_INTERVAL = 3;  // initial spawn interval in seconds
+        const MIN_SPAWN_INTERVAL = 1;  // minimum cap on spawn interval
+        const DIFFICULTY_SCALE = 0.15;  // difficulty multiplier: spawn interval decreases by this per second survived
 
         // helper: spawn enemy at random edge
         function spawnEnemy() {
@@ -64,6 +67,7 @@
             gameOver: false,
             timeElapsed: 0,
             spawnTimer: 0,
+            score: 0,
             keysPressed: {}  // map for smooth movement
         };
 
@@ -97,18 +101,26 @@
             state.gameOver = false;
             state.timeElapsed = 0;
             state.spawnTimer = 0;
+            state.score = 0;
             state.keysPressed = {};
         }
 
         function update(deltaTime) {
-            // increment timer
+            // increment timer and score
             state.timeElapsed += deltaTime;
+            state.score += deltaTime;  // 1 point per second
 
             if (state.gameOver) return;  // stop updating if game over
 
-            // spawn new enemy every 3 seconds
+            // calculate current spawn interval with gradual difficulty increase
+            const currentSpawnInterval = Math.max(
+                MIN_SPAWN_INTERVAL,
+                SPAWN_INTERVAL - (state.timeElapsed * DIFFICULTY_SCALE)
+            );
+
+            // spawn new enemy when interval elapses
             state.spawnTimer += deltaTime;
-            if (state.spawnTimer >= 3) {
+            if (state.spawnTimer >= currentSpawnInterval) {
                 state.enemies.push(spawnEnemy());
                 state.spawnTimer = 0;
             }
@@ -180,6 +192,7 @@
             ctx.font = '24px Arial';
             ctx.textAlign = 'left';
             ctx.fillText(`Time: ${state.timeElapsed.toFixed(1)}s`, 20, 30);
+            ctx.fillText(`Score: ${Math.floor(state.score)}`, 20, 60);
 
             // draw game over screen
             if (state.gameOver) {
