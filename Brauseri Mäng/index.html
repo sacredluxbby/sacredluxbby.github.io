@@ -28,13 +28,33 @@
         const CANVAS_WIDTH = 800;
         const CANVAS_HEIGHT = 600;
         const PLAYER_SIZE = 20;
-        // speed in pixels per second
-        const PLAYER_SPEED = 200;
+        const PLAYER_SPEED = 200;  // always constant
         const ENEMY_RADIUS = 10;
-        const ENEMY_SPEED = 100;
-        const SPAWN_INTERVAL = 3;  // initial spawn interval in seconds
-        const MIN_SPAWN_INTERVAL = 1;  // minimum cap on spawn interval
-        const DIFFICULTY_SCALE = 0.15;  // difficulty multiplier: spawn interval decreases by this per second survived
+
+        // difficulty presets
+        const DIFFICULTIES = {
+            easy: {
+                name: 'EASY',
+                enemySpeed: 80,
+                spawnInterval: 4,
+                minSpawnInterval: 1.5,
+                difficultyScale: 0.08
+            },
+            medium: {
+                name: 'MEDIUM',
+                enemySpeed: 100,
+                spawnInterval: 3,
+                minSpawnInterval: 1,
+                difficultyScale: 0.15
+            },
+            hard: {
+                name: 'HARD',
+                enemySpeed: 130,
+                spawnInterval: 2,
+                minSpawnInterval: 0.5,
+                difficultyScale: 0.25
+            }
+        };
 
         // helper: spawn enemy at random edge
         function spawnEnemy() {
@@ -58,13 +78,14 @@
 
         // state
         const state = {
+            gameState: 'MENU',  // MENU, PLAY, or GAME_OVER
+            currentDifficulty: null,  // will be set on difficulty selection
             player: {
                 x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2,
                 y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2,
                 color: 'green'
             },
-            enemies: [spawnEnemy()],
-            gameOver: false,
+            enemies: [],
             timeElapsed: 0,
             spawnTimer: 0,
             score: 0,
@@ -94,28 +115,50 @@
             return distSquared < ENEMY_RADIUS * ENEMY_RADIUS;
         }
 
-        function restart() {
+        function startGame(difficultyKey) {
+            state.currentDifficulty = DIFFICULTIES[difficultyKey];
+            state.gameState = 'PLAY';
             state.player.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
             state.player.y = CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2;
             state.enemies = [spawnEnemy()];
-            state.gameOver = false;
             state.timeElapsed = 0;
             state.spawnTimer = 0;
             state.score = 0;
             state.keysPressed = {};
         }
 
+        function returnToMenu() {
+            state.gameState = 'MENU';
+            state.currentDifficulty = null;
+            state.enemies = [];
+            state.timeElapsed = 0;
+            state.spawnTimer = 0;
+            state.score = 0;
+            state.keysPressed = {};
+        }
+
+        function restart() {
+            returnToMenu();
+        }
+
         function update(deltaTime) {
+            if (state.gameState === 'MENU') {
+                // no gameplay in menu
+                return;
+            }
+
             // increment timer and score
             state.timeElapsed += deltaTime;
             state.score += deltaTime;  // 1 point per second
 
-            if (state.gameOver) return;  // stop updating if game over
+            if (state.gameState === 'GAME_OVER') return;  // stop updating if game over
+
+            const difficulty = state.currentDifficulty;
 
             // calculate current spawn interval with gradual difficulty increase
             const currentSpawnInterval = Math.max(
-                MIN_SPAWN_INTERVAL,
-                SPAWN_INTERVAL - (state.timeElapsed * DIFFICULTY_SCALE)
+                difficulty.minSpawnInterval,
+                difficulty.spawnInterval - (state.timeElapsed * difficulty.difficultyScale)
             );
 
             // spawn new enemy when interval elapses
@@ -158,13 +201,13 @@
                 if (dist > 0) {
                     const nx = dx / dist;
                     const ny = dy / dist;
-                    enemy.x += nx * ENEMY_SPEED * deltaTime;
-                    enemy.y += ny * ENEMY_SPEED * deltaTime;
+                    enemy.x += nx * difficulty.enemySpeed * deltaTime;
+                    enemy.y += ny * difficulty.enemySpeed * deltaTime;
                 }
 
                 // check collision with this enemy
                 if (checkCollision(enemy)) {
-                    state.gameOver = true;
+                    state.gameState = 'GAME_OVER';
                     break;
                 }
             }
@@ -174,6 +217,29 @@
             // clear
             ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+            if (state.gameState === 'MENU') {
+                // draw menu screen
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('SURVIVOR GAME', CANVAS_WIDTH / 2, 80);
+
+                ctx.font = '32px Arial';
+                ctx.fillText('Select Difficulty', CANVAS_WIDTH / 2, 150);
+
+                ctx.font = '24px Arial';
+                ctx.fillText('Press 1 for EASY', CANVAS_WIDTH / 2, 220);
+                ctx.fillText('Press 2 for MEDIUM', CANVAS_WIDTH / 2, 280);
+                ctx.fillText('Press 3 for HARD', CANVAS_WIDTH / 2, 340);
+
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#aaa';
+                ctx.fillText('(Easy: slower enemies, longer spawn intervals)', CANVAS_WIDTH / 2, 400);
+                ctx.fillText('(Hard: faster enemies, shorter spawn intervals)', CANVAS_WIDTH / 2, 430);
+                return;
+            }
+
+            // draw gameplay
             // draw player
             ctx.fillStyle = state.player.color;
             ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
@@ -195,7 +261,7 @@
             ctx.fillText(`Score: ${Math.floor(state.score)}`, 20, 60);
 
             // draw game over screen
-            if (state.gameOver) {
+            if (state.gameState === 'GAME_OVER') {
                 // semi-transparent overlay
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -225,6 +291,15 @@
 
         // input listeners
         window.addEventListener('keydown', e => {
+            // difficulty selection from menu
+            if (state.gameState === 'MENU') {
+                if (e.key === '1') startGame('easy');
+                if (e.key === '2') startGame('medium');
+                if (e.key === '3') startGame('hard');
+                return;
+            }
+
+            // restart from game over
             if (e.key.toLowerCase() === 'r') {
                 restart();
             } else {
