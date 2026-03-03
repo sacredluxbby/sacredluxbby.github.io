@@ -62,6 +62,7 @@
             },
             enemy: spawnEnemy(),
             gameOver: false,
+            timeElapsed: 0,
             keysPressed: {}  // map for smooth movement
         };
 
@@ -93,10 +94,14 @@
             state.player.y = CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2;
             state.enemy = spawnEnemy();
             state.gameOver = false;
+            state.timeElapsed = 0;
             state.keysPressed = {};
         }
 
         function update(deltaTime) {
+            // increment timer
+            state.timeElapsed += deltaTime;
+
             if (state.gameOver) return;  // stop updating if game over
 
             // calculate velocity based on keys
@@ -153,6 +158,12 @@
             ctx.beginPath();
             ctx.arc(state.enemy.x, state.enemy.y, ENEMY_RADIUS, 0, Math.PI * 2);
             ctx.fill();
+
+            // draw UI overlay (time survived)
+            ctx.fillStyle = '#fff';
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Time: ${state.timeElapsed.toFixed(1)}s`, 20, 30);
 
             // draw game over screen
             if (state.gameOver) {
