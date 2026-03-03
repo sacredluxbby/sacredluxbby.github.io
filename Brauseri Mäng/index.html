@@ -89,8 +89,22 @@
             timeElapsed: 0,
             spawnTimer: 0,
             score: 0,
+            highScore: 0,
             keysPressed: {}  // map for smooth movement
         };
+
+        // high score persistence
+        function loadHighScore() {
+            const saved = localStorage.getItem('canvas_apocalypse_highscore');
+            return saved ? parseInt(saved, 10) : 0;
+        }
+
+        function saveHighScore(score) {
+            localStorage.setItem('canvas_apocalypse_highscore', Math.floor(score));
+        }
+
+        // initialize high score on page load
+        state.highScore = loadHighScore();
 
         // setup
         const canvas = document.getElementById('gameCanvas');
@@ -208,6 +222,11 @@
                 // check collision with this enemy
                 if (checkCollision(enemy)) {
                     state.gameState = 'GAME_OVER';
+                    // update high score if current score is better
+                    if (state.score > state.highScore) {
+                        state.highScore = state.score;
+                        saveHighScore(state.highScore);
+                    }
                     break;
                 }
             }
@@ -236,6 +255,11 @@
                 ctx.fillStyle = '#aaa';
                 ctx.fillText('(Easy: slower enemies, longer spawn intervals)', CANVAS_WIDTH / 2, 400);
                 ctx.fillText('(Hard: faster enemies, shorter spawn intervals)', CANVAS_WIDTH / 2, 430);
+
+                // display high score
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '20px Arial';
+                ctx.fillText(`High Score: ${Math.floor(state.highScore)}`, CANVAS_WIDTH / 2, 500);
                 return;
             }
 
@@ -272,9 +296,16 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
 
+                // score and high score
+                ctx.font = '24px Arial';
+                ctx.fillText(`Final Score: ${Math.floor(state.score)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText(`High Score: ${Math.floor(state.highScore)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+
                 // restart instruction
+                ctx.fillStyle = '#fff';
                 ctx.font = '20px Arial';
-                ctx.fillText('Press R to restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+                ctx.fillText('Press R to restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 110);
             }
         }
 
