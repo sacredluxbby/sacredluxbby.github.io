@@ -30,6 +30,10 @@
         const PLAYER_SIZE = 20;
         const PLAYER_SPEED = 200;  // always constant
         const ENEMY_RADIUS = 10;
+        const SHAKE_DURATION = 0.2;  // screen shake duration in seconds
+        const SHAKE_MAGNITUDE = 8;  // pixels
+        const PARTICLE_COUNT = 30;
+        const PARTICLE_LIFETIME = 0.6;  // seconds
 
         // difficulty presets
         const DIFFICULTIES = {
@@ -86,10 +90,12 @@
                 color: 'green'
             },
             enemies: [],
+            particles: [],
             timeElapsed: 0,
             spawnTimer: 0,
             score: 0,
             highScore: 0,
+            shakeTimer: 0,
             keysPressed: {}  // map for smooth movement
         };
 
@@ -103,12 +109,77 @@
             localStorage.setItem('canvas_apocalypse_highscore', Math.floor(score));
         }
 
-        // initialize high score on page load
-        state.highScore = loadHighScore();
+        // particle system
+        function spawnExplosion(x, y) {
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const angle = (Math.random() * Math.PI * 2);
+                const speed = 150 + Math.random() * 150;  // pixels per second
+                const particle = {
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    lifetime: 0,
+                    maxLifetime: PARTICLE_LIFETIME
+                };
+                state.particles.push(particle);
+            }
+            // trigger screen shake
+            state.shakeTimer = SHAKE_DURATION;
+        }
+
+        function updateParticles(deltaTime) {
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                p.lifetime += deltaTime;
+                p.x += p.vx * deltaTime;
+                p.y += p.vy * deltaTime;
+
+                // remove if lifetime exceeded
+                if (p.lifetime > p.maxLifetime) {
+                    state.particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawBackground() {
+            // moving grid background
+            ctx.strokeStyle = 'rgba(100, 100, 120, 0.15)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            const offset = (state.timeElapsed * 20) % gridSize;  // slow drift
+
+            // vertical lines
+            for (let x = -offset; x < CANVAS_WIDTH; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, CANVAS_HEIGHT);
+                ctx.stroke();
+            }
+            // horizontal lines
+            for (let y = -offset; y < CANVAS_HEIGHT; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(CANVAS_WIDTH, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawParticles() {
+            for (let i = 0; i < state.particles.length; i++) {
+                const p = state.particles[i];
+                const alpha = 1 - (p.lifetime / p.maxLifetime);
+                ctx.fillStyle = `rgba(255, 150, 50, ${alpha * 0.8})`;
+                ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+            }
+        }
 
         // setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // initialize high score on page load
+        state.highScore = loadHighScore();
 
         // collision detection: circle vs rectangle
         function checkCollision(enemy) {
@@ -145,9 +216,11 @@
             state.gameState = 'MENU';
             state.currentDifficulty = null;
             state.enemies = [];
+            state.particles = [];
             state.timeElapsed = 0;
             state.spawnTimer = 0;
             state.score = 0;
+            state.shakeTimer = 0;
             state.keysPressed = {};
         }
 
@@ -161,9 +234,15 @@
                 return;
             }
 
+            // update shake timer
+            state.shakeTimer = Math.max(0, state.shakeTimer - deltaTime);
+
             // increment timer and score
             state.timeElapsed += deltaTime;
             state.score += deltaTime;  // 1 point per second
+
+            // update particles
+            updateParticles(deltaTime);
 
             if (state.gameState === 'GAME_OVER') return;  // stop updating if game over
 
@@ -222,6 +301,8 @@
                 // check collision with this enemy
                 if (checkCollision(enemy)) {
                     state.gameState = 'GAME_OVER';
+                    // spawn explosion at collision point
+                    spawnExplosion(state.player.x + PLAYER_SIZE / 2, state.player.y + PLAYER_SIZE / 2);
                     // update high score if current score is better
                     if (state.score > state.highScore) {
                         state.highScore = state.score;
@@ -264,6 +345,20 @@
             }
 
             // draw gameplay
+            // draw background
+            drawBackground();
+
+            // calculate screen shake offset
+            let shakeX = 0, shakeY = 0;
+            if (state.shakeTimer > 0) {
+                shakeX = (Math.random() - 0.5) * SHAKE_MAGNITUDE * 2;
+                shakeY = (Math.random() - 0.5) * SHAKE_MAGNITUDE * 2;
+            }
+
+            // apply camera shake transform
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+
             // draw player
             ctx.fillStyle = state.player.color;
             ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
@@ -276,6 +371,12 @@
                 ctx.arc(enemy.x, enemy.y, ENEMY_RADIUS, 0, Math.PI * 2);
                 ctx.fill();
             }
+
+            // draw particles
+            drawParticles();
+
+            // restore camera transform
+            ctx.restore();
 
             // draw UI overlay (time survived)
             ctx.fillStyle = '#fff';
