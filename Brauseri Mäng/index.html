@@ -4,445 +4,298 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Canvas Game</title>
+    <title>Neon Survivor Game</title>
     <style>
-        /* dark background and center canvas */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
         body {
             margin: 0;
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #111;
+            background: #050505;
+            font-family: 'Poppins', sans-serif;
+            color: #f0e6ff;
+            overflow: hidden;
         }
         #gameCanvas {
-            background: #222;
+            background: #0a0510;
             display: block;
+            border: 2px solid #9d50ff;
+            box-shadow: 0 0 50px rgba(157, 80, 255, 0.2);
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script>
-        // constants
         const CANVAS_WIDTH = 800;
         const CANVAS_HEIGHT = 600;
         const PLAYER_SIZE = 20;
-        const PLAYER_SPEED = 200;  // always constant
+        const PLAYER_SPEED = 250;
         const ENEMY_RADIUS = 10;
-        const SHAKE_DURATION = 0.2;  // screen shake duration in seconds
-        const SHAKE_MAGNITUDE = 8;  // pixels
+        const SHAKE_DURATION = 0.2;
+        const SHAKE_MAGNITUDE = 8;
         const PARTICLE_COUNT = 30;
-        const PARTICLE_LIFETIME = 0.6;  // seconds
+        const PARTICLE_LIFETIME = 0.6;
 
-        // difficulty presets
-        const DIFFICULTIES = {
-            easy: {
-                name: 'EASY',
-                enemySpeed: 80,
-                spawnInterval: 4,
-                minSpawnInterval: 1.5,
-                difficultyScale: 0.08
-            },
-            medium: {
-                name: 'MEDIUM',
-                enemySpeed: 100,
-                spawnInterval: 3,
-                minSpawnInterval: 1,
-                difficultyScale: 0.15
-            },
-            hard: {
-                name: 'HARD',
-                enemySpeed: 130,
-                spawnInterval: 2,
-                minSpawnInterval: 0.5,
-                difficultyScale: 0.25
-            }
+        const COLORS = {
+            player: '#9d50ff',
+            enemy: '#ff50e0',
+            particle: '#ff50e0',
+            button: 'rgba(26, 10, 46, 0.8)',
+            buttonHover: '#9d50ff',
+            accent: '#ff50e0'
         };
 
-        // helper: spawn enemy at random edge
-        function spawnEnemy() {
-            const edge = Math.floor(Math.random() * 4);
-            let x, y;
-            if (edge === 0) { // top
-                x = Math.random() * CANVAS_WIDTH;
-                y = -ENEMY_RADIUS;
-            } else if (edge === 1) { // bottom
-                x = Math.random() * CANVAS_WIDTH;
-                y = CANVAS_HEIGHT + ENEMY_RADIUS;
-            } else if (edge === 2) { // left
-                x = -ENEMY_RADIUS;
-                y = Math.random() * CANVAS_HEIGHT;
-            } else { // right
-                x = CANVAS_WIDTH + ENEMY_RADIUS;
-                y = Math.random() * CANVAS_HEIGHT;
-            }
-            return { x, y, color: 'red' };
-        }
+        const DIFFICULTIES = {
+            easy: { name: 'EASY', enemySpeed: 80, spawnInterval: 4, minSpawnInterval: 1.5, difficultyScale: 0.08 },
+            medium: { name: 'MEDIUM', enemySpeed: 120, spawnInterval: 3, minSpawnInterval: 1, difficultyScale: 0.15 },
+            hard: { name: 'HARD', enemySpeed: 160, spawnInterval: 2, minSpawnInterval: 0.5, difficultyScale: 0.25 }
+        };
 
-        // state
         const state = {
-            gameState: 'MENU',  // MENU, PLAY, or GAME_OVER
-            currentDifficulty: null,  // will be set on difficulty selection
-            player: {
-                x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2,
-                y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2,
-                color: 'green'
-            },
+            gameState: 'MENU',
+            currentDifficultyKey: null,
+            currentDifficulty: null,
+            player: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
             enemies: [],
             particles: [],
+            bgParticles: [],
             timeElapsed: 0,
             spawnTimer: 0,
             score: 0,
-            highScore: 0,
+            highScore: localStorage.getItem('neon_survivor_highscore') || 0,
             shakeTimer: 0,
-            keysPressed: {}  // map for smooth movement
+            keysPressed: {},
+            mousePos: { x: 0, y: 0 },
+            menuAlpha: 0
         };
 
-        // high score persistence
-        function loadHighScore() {
-            const saved = localStorage.getItem('canvas_apocalypse_highscore');
-            return saved ? parseInt(saved, 10) : 0;
+        for(let i=0; i<50; i++) {
+            state.bgParticles.push({
+                x: Math.random() * CANVAS_WIDTH,
+                y: Math.random() * CANVAS_HEIGHT,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 20 + 10
+            });
         }
 
-        function saveHighScore(score) {
-            localStorage.setItem('canvas_apocalypse_highscore', Math.floor(score));
+        const menuButtons = {
+            easy: { x: 50, y: 220, width: 300, height: 60, difficulty: 'easy' },
+            medium: { x: 50, y: 300, width: 300, height: 60, difficulty: 'medium' },
+            hard: { x: 50, y: 380, width: 300, height: 60, difficulty: 'hard' }
+        };
+
+        function spawnEnemy() {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if (edge === 0) { x = Math.random() * CANVAS_WIDTH; y = -ENEMY_RADIUS; }
+            else if (edge === 1) { x = Math.random() * CANVAS_WIDTH; y = CANVAS_HEIGHT + ENEMY_RADIUS; }
+            else if (edge === 2) { x = -ENEMY_RADIUS; y = Math.random() * CANVAS_HEIGHT; }
+            else { x = CANVAS_WIDTH + ENEMY_RADIUS; y = Math.random() * CANVAS_HEIGHT; }
+            return { x, y };
         }
 
-        // particle system
         function spawnExplosion(x, y) {
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const angle = (Math.random() * Math.PI * 2);
-                const speed = 150 + Math.random() * 150;  // pixels per second
-                const particle = {
-                    x: x,
-                    y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    lifetime: 0,
-                    maxLifetime: PARTICLE_LIFETIME
-                };
-                state.particles.push(particle);
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 100 + Math.random() * 200;
+                state.particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, lifetime: 0, maxLifetime: PARTICLE_LIFETIME });
             }
-            // trigger screen shake
             state.shakeTimer = SHAKE_DURATION;
         }
 
-        function updateParticles(deltaTime) {
-            for (let i = state.particles.length - 1; i >= 0; i--) {
-                const p = state.particles[i];
-                p.lifetime += deltaTime;
-                p.x += p.vx * deltaTime;
-                p.y += p.vy * deltaTime;
-
-                // remove if lifetime exceeded
-                if (p.lifetime > p.maxLifetime) {
-                    state.particles.splice(i, 1);
-                }
-            }
+        function isPointInButton(x, y, button) {
+            return x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height;
         }
 
-        function drawBackground() {
-            // moving grid background
-            ctx.strokeStyle = 'rgba(100, 100, 120, 0.15)';
-            ctx.lineWidth = 1;
-            const gridSize = 40;
-            const offset = (state.timeElapsed * 20) % gridSize;  // slow drift
-
-            // vertical lines
-            for (let x = -offset; x < CANVAS_WIDTH; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, CANVAS_HEIGHT);
-                ctx.stroke();
-            }
-            // horizontal lines
-            for (let y = -offset; y < CANVAS_HEIGHT; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(CANVAS_WIDTH, y);
-                ctx.stroke();
-            }
-        }
-
-        function drawParticles() {
-            for (let i = 0; i < state.particles.length; i++) {
-                const p = state.particles[i];
-                const alpha = 1 - (p.lifetime / p.maxLifetime);
-                ctx.fillStyle = `rgba(255, 150, 50, ${alpha * 0.8})`;
-                ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-            }
-        }
-
-        // setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // initialize high score on page load
-        state.highScore = loadHighScore();
-
-        // collision detection: circle vs rectangle
-        function checkCollision(enemy) {
-            // treat player as circle at center for simplicity
-            const playerCenterX = state.player.x + PLAYER_SIZE / 2;
-            const playerCenterY = state.player.y + PLAYER_SIZE / 2;
-            const playerHalfSize = PLAYER_SIZE / 2;
-
-            // find closest point on player rect to enemy circle center
-            const closestX = Math.max(state.player.x, Math.min(enemy.x, state.player.x + PLAYER_SIZE));
-            const closestY = Math.max(state.player.y, Math.min(enemy.y, state.player.y + PLAYER_SIZE));
-
-            // distance between circle center and closest point on rect
-            const dx = enemy.x - closestX;
-            const dy = enemy.y - closestY;
-            const distSquared = dx * dx + dy * dy;
-
-            return distSquared < ENEMY_RADIUS * ENEMY_RADIUS;
-        }
-
         function startGame(difficultyKey) {
+            state.currentDifficultyKey = difficultyKey;
             state.currentDifficulty = DIFFICULTIES[difficultyKey];
             state.gameState = 'PLAY';
-            state.player.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
-            state.player.y = CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2;
-            state.enemies = [spawnEnemy()];
-            state.timeElapsed = 0;
-            state.spawnTimer = 0;
-            state.score = 0;
-            state.keysPressed = {};
-        }
-
-        function returnToMenu() {
-            state.gameState = 'MENU';
-            state.currentDifficulty = null;
+            state.player = { x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2, y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2 };
             state.enemies = [];
             state.particles = [];
             state.timeElapsed = 0;
-            state.spawnTimer = 0;
             state.score = 0;
-            state.shakeTimer = 0;
+            state.spawnTimer = 0;
             state.keysPressed = {};
         }
 
-        function restart() {
-            returnToMenu();
-        }
+        function update(dt) {
+            state.bgParticles.forEach(p => {
+                p.y += p.speed * dt;
+                if(p.y > CANVAS_HEIGHT) p.y = -10;
+            });
 
-        function update(deltaTime) {
             if (state.gameState === 'MENU') {
-                // no gameplay in menu
+                state.menuAlpha = Math.min(1, state.menuAlpha + dt * 2);
                 return;
             }
 
-            // update shake timer
-            state.shakeTimer = Math.max(0, state.shakeTimer - deltaTime);
+            state.shakeTimer = Math.max(0, state.shakeTimer - dt);
+            state.particles.forEach((p, i) => {
+                p.lifetime += dt; p.x += p.vx * dt; p.y += p.vy * dt;
+                if (p.lifetime > p.maxLifetime) state.particles.splice(i, 1);
+            });
 
-            // increment timer and score
-            state.timeElapsed += deltaTime;
-            state.score += deltaTime;  // 1 point per second
+            if (state.gameState === 'GAME_OVER') return;
 
-            // update particles
-            updateParticles(deltaTime);
+            state.timeElapsed += dt;
+            state.score += dt;
 
-            if (state.gameState === 'GAME_OVER') return;  // stop updating if game over
+            const diff = state.currentDifficulty;
+            const spawnInt = Math.max(diff.minSpawnInterval, diff.spawnInterval - state.timeElapsed * diff.difficultyScale);
+            state.spawnTimer += dt;
+            if (state.spawnTimer >= spawnInt) { state.enemies.push(spawnEnemy()); state.spawnTimer = 0; }
 
-            const difficulty = state.currentDifficulty;
+            let vx = 0, vy = 0;
+            const keys = state.keysPressed;
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) vy -= 1;
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) vy += 1;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) vx -= 1;
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) vx += 1;
 
-            // calculate current spawn interval with gradual difficulty increase
-            const currentSpawnInterval = Math.max(
-                difficulty.minSpawnInterval,
-                difficulty.spawnInterval - (state.timeElapsed * difficulty.difficultyScale)
-            );
+            if (vx !== 0 && vy !== 0) { vx *= Math.SQRT1_2; vy *= Math.SQRT1_2; }
+            state.player.x = Math.max(0, Math.min(CANVAS_WIDTH - PLAYER_SIZE, state.player.x + vx * PLAYER_SPEED * dt));
+            state.player.y = Math.max(0, Math.min(CANVAS_HEIGHT - PLAYER_SIZE, state.player.y + vy * PLAYER_SPEED * dt));
 
-            // spawn new enemy when interval elapses
-            state.spawnTimer += deltaTime;
-            if (state.spawnTimer >= currentSpawnInterval) {
-                state.enemies.push(spawnEnemy());
-                state.spawnTimer = 0;
-            }
+            state.enemies.forEach((en, i) => {
+                const dx = state.player.x + PLAYER_SIZE / 2 - en.x, dy = state.player.y + PLAYER_SIZE / 2 - en.y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                en.x += (dx / d) * diff.enemySpeed * dt; en.y += (dy / d) * diff.enemySpeed * dt;
 
-            // calculate velocity based on keys
-            let vx = 0;
-            let vy = 0;
-            if (state.keysPressed['ArrowUp'] || state.keysPressed['w'] || state.keysPressed['W']) vy -= 1;
-            if (state.keysPressed['ArrowDown'] || state.keysPressed['s'] || state.keysPressed['S']) vy += 1;
-            if (state.keysPressed['ArrowLeft'] || state.keysPressed['a'] || state.keysPressed['A']) vx -= 1;
-            if (state.keysPressed['ArrowRight'] || state.keysPressed['d'] || state.keysPressed['D']) vx += 1;
-
-            // normalize diagonal movement
-            if (vx !== 0 && vy !== 0) {
-                const inv = 1 / Math.sqrt(2);
-                vx *= inv;
-                vy *= inv;
-            }
-
-            // apply speed and deltaTime (deltaTime in seconds)
-            state.player.x += vx * PLAYER_SPEED * deltaTime;
-            state.player.y += vy * PLAYER_SPEED * deltaTime;
-
-            // clamp to bounds
-            state.player.x = Math.max(0, Math.min(CANVAS_WIDTH - PLAYER_SIZE, state.player.x));
-            state.player.y = Math.max(0, Math.min(CANVAS_HEIGHT - PLAYER_SIZE, state.player.y));
-
-            // move all enemies toward player and check collisions
-            for (let i = 0; i < state.enemies.length; i++) {
-                const enemy = state.enemies[i];
-                const dx = state.player.x + PLAYER_SIZE / 2 - enemy.x;
-                const dy = state.player.y + PLAYER_SIZE / 2 - enemy.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist > 0) {
-                    const nx = dx / dist;
-                    const ny = dy / dist;
-                    enemy.x += nx * difficulty.enemySpeed * deltaTime;
-                    enemy.y += ny * difficulty.enemySpeed * deltaTime;
-                }
-
-                // check collision with this enemy
-                if (checkCollision(enemy)) {
+                const cX = Math.max(state.player.x, Math.min(en.x, state.player.x + PLAYER_SIZE));
+                const cY = Math.max(state.player.y, Math.min(en.y, state.player.y + PLAYER_SIZE));
+                if ((en.x - cX) ** 2 + (en.y - cY) ** 2 < ENEMY_RADIUS ** 2) {
                     state.gameState = 'GAME_OVER';
-                    // spawn explosion at collision point
                     spawnExplosion(state.player.x + PLAYER_SIZE / 2, state.player.y + PLAYER_SIZE / 2);
-                    // update high score if current score is better
-                    if (state.score > state.highScore) {
-                        state.highScore = state.score;
-                        saveHighScore(state.highScore);
-                    }
-                    break;
+                    if (state.score > state.highScore) { state.highScore = state.score; localStorage.setItem('neon_survivor_highscore', Math.floor(state.highScore)); }
                 }
-            }
+            });
         }
 
         function draw() {
-            // clear
             ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-            if (state.gameState === 'MENU') {
-                // draw menu screen
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 48px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('SURVIVOR GAME', CANVAS_WIDTH / 2, 80);
-
-                ctx.font = '32px Arial';
-                ctx.fillText('Select Difficulty', CANVAS_WIDTH / 2, 150);
-
-                ctx.font = '24px Arial';
-                ctx.fillText('Press 1 for EASY', CANVAS_WIDTH / 2, 220);
-                ctx.fillText('Press 2 for MEDIUM', CANVAS_WIDTH / 2, 280);
-                ctx.fillText('Press 3 for HARD', CANVAS_WIDTH / 2, 340);
-
-                ctx.font = '16px Arial';
-                ctx.fillStyle = '#aaa';
-                ctx.fillText('(Easy: slower enemies, longer spawn intervals)', CANVAS_WIDTH / 2, 400);
-                ctx.fillText('(Hard: faster enemies, shorter spawn intervals)', CANVAS_WIDTH / 2, 430);
-
-                // display high score
-                ctx.fillStyle = '#ffff00';
-                ctx.font = '20px Arial';
-                ctx.fillText(`High Score: ${Math.floor(state.highScore)}`, CANVAS_WIDTH / 2, 500);
-                return;
-            }
-
-            // draw gameplay
-            // draw background
-            drawBackground();
-
-            // calculate screen shake offset
-            let shakeX = 0, shakeY = 0;
-            if (state.shakeTimer > 0) {
-                shakeX = (Math.random() - 0.5) * SHAKE_MAGNITUDE * 2;
-                shakeY = (Math.random() - 0.5) * SHAKE_MAGNITUDE * 2;
-            }
-
-            // apply camera shake transform
-            ctx.save();
-            ctx.translate(shakeX, shakeY);
-
-            // draw player
-            ctx.fillStyle = state.player.color;
-            ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
-
-            // draw all enemies (red circles)
-            ctx.fillStyle = '#f00';
-            for (let i = 0; i < state.enemies.length; i++) {
-                const enemy = state.enemies[i];
+            
+            ctx.fillStyle = 'rgba(157, 80, 255, 0.1)';
+            state.bgParticles.forEach(p => {
                 ctx.beginPath();
-                ctx.arc(enemy.x, enemy.y, ENEMY_RADIUS, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
                 ctx.fill();
-            }
+            });
 
-            // draw particles
-            drawParticles();
-
-            // restore camera transform
-            ctx.restore();
-
-            // draw UI overlay (time survived)
-            ctx.fillStyle = '#fff';
-            ctx.font = '24px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Time: ${state.timeElapsed.toFixed(1)}s`, 20, 30);
-            ctx.fillText(`Score: ${Math.floor(state.score)}`, 20, 60);
-
-            // draw game over screen
-            if (state.gameState === 'GAME_OVER') {
-                // semi-transparent overlay
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-                // "GAME OVER" text
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 48px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
-
-                // score and high score
-                ctx.font = '24px Arial';
-                ctx.fillText(`Final Score: ${Math.floor(state.score)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20);
-                ctx.fillStyle = '#ffff00';
-                ctx.fillText(`High Score: ${Math.floor(state.highScore)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
-
-                // restart instruction
-                ctx.fillStyle = '#fff';
-                ctx.font = '20px Arial';
-                ctx.fillText('Press R to restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 110);
-            }
-        }
-
-        let lastTimestamp = 0;
-        function loop(timestamp) {
-            if (!lastTimestamp) lastTimestamp = timestamp;
-            const delta = (timestamp - lastTimestamp) / 1000; // convert ms to seconds
-            lastTimestamp = timestamp;
-
-            update(delta);
-            draw();
-            requestAnimationFrame(loop);
-        }
-
-        // input listeners
-        window.addEventListener('keydown', e => {
-            // difficulty selection from menu
             if (state.gameState === 'MENU') {
-                if (e.key === '1') startGame('easy');
-                if (e.key === '2') startGame('medium');
-                if (e.key === '3') startGame('hard');
+                ctx.globalAlpha = state.menuAlpha;
+                
+                ctx.strokeStyle = 'rgba(157, 80, 255, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(400, 0); ctx.lineTo(400, CANVAS_HEIGHT);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(10, 5, 16, 0.7)';
+                ctx.fillRect(0, 0, 400, CANVAS_HEIGHT);
+                
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLORS.player;
+                ctx.font = '900 48px Poppins';
+                ctx.fillText('NEON', 50, 100);
+                ctx.fillStyle = COLORS.accent;
+                ctx.fillText('SURVIVOR', 50, 150);
+
+                ctx.font = '400 16px Poppins';
+                ctx.fillStyle = '#b3a1cc';
+                ctx.fillText('SELECT YOUR CHALLENGE', 50, 190);
+
+                Object.values(menuButtons).forEach(b => {
+                    const h = isPointInButton(state.mousePos.x, state.mousePos.y, b);
+                    if(h) {
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = COLORS.player;
+                    }
+                    ctx.fillStyle = h ? COLORS.buttonHover : COLORS.button;
+                    ctx.beginPath();
+                    ctx.roundRect(b.x, b.y, b.width, b.height, 12);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = h ? '#fff' : 'rgba(157, 80, 255, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    ctx.fillStyle = h ? '#000' : '#fff';
+                    ctx.font = '700 20px Poppins';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.difficulty.toUpperCase(), b.x + b.width / 2, b.y + b.height / 2 + 8);
+                });
+
+                ctx.textAlign = 'left';
+                ctx.fillStyle = COLORS.accent;
+                ctx.font = '700 18px Poppins';
+                ctx.fillText(`BEST SURVIVAL: ${Math.floor(state.highScore)}s`, 50, 560);
+                
+                ctx.globalAlpha = 1;
                 return;
             }
 
-            // restart from game over
+            let sx = (Math.random() - 0.5) * state.shakeTimer * 50, sy = (Math.random() - 0.5) * state.shakeTimer * 50;
+            ctx.save(); ctx.translate(sx, sy);
+            ctx.shadowBlur = 15; ctx.shadowColor = COLORS.player; ctx.fillStyle = COLORS.player;
+            ctx.fillRect(state.player.x, state.player.y, PLAYER_SIZE, PLAYER_SIZE);
+            ctx.shadowBlur = 10; ctx.shadowColor = COLORS.enemy; ctx.fillStyle = COLORS.enemy;
+            state.enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, ENEMY_RADIUS, 0, Math.PI * 2); ctx.fill(); });
+            state.particles.forEach(p => { ctx.globalAlpha = 1 - p.lifetime / p.maxLifetime; ctx.fillRect(p.x, p.y, 4, 4); });
+            ctx.restore(); ctx.globalAlpha = 1;
+
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Poppins'; ctx.textAlign = 'left';
+            ctx.fillText(`Score: ${Math.floor(state.score)}`, 20, 40);
+
+            if (state.gameState === 'GAME_OVER') {
+                ctx.fillStyle = 'rgba(5, 5, 5, 0.9)'; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                ctx.fillStyle = COLORS.player; ctx.font = '900 60px Poppins'; ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+                ctx.fillStyle = '#fff'; ctx.font = '700 24px Poppins';
+                ctx.fillText(`Final Score: ${Math.floor(state.score)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+                ctx.fillStyle = COLORS.accent;
+                ctx.fillText(`Best: ${Math.floor(state.highScore)}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 70);
+                ctx.fillStyle = '#fff'; ctx.font = '400 20px Poppins';
+                ctx.fillText('Press R to Restart', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 130);
+            }
+        }
+
+        function loop(t) { 
+            const dt = Math.min(0.1, (t - (state.lt || t)) / 1000); 
+            state.lt = t; update(dt); draw(); 
+            requestAnimationFrame(loop); 
+        }
+
+        window.addEventListener('keydown', e => { 
             if (e.key.toLowerCase() === 'r') {
-                restart();
+                if (state.gameState === 'GAME_OVER') startGame(state.currentDifficultyKey || 'medium');
             } else {
                 state.keysPressed[e.key] = true;
             }
         });
-        window.addEventListener('keyup', e => {
-            state.keysPressed[e.key] = false;
+        window.addEventListener('keyup', e => state.keysPressed[e.key] = false);
+
+        canvas.addEventListener('mousemove', e => { 
+            const r = canvas.getBoundingClientRect(); 
+            state.mousePos = { x: e.clientX - r.left, y: e.clientY - r.top }; 
         });
 
-        // start game
+        canvas.addEventListener('click', () => { 
+            if (state.gameState === 'MENU') {
+                Object.values(menuButtons).forEach(b => { 
+                    if (isPointInButton(state.mousePos.x, state.mousePos.y, b)) startGame(b.difficulty); 
+                });
+            }
+        });
+
         requestAnimationFrame(loop);
     </script>
 </body>

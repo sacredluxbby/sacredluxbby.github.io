@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programming Excuse Generator</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap');
         * {
             margin: 0;
             padding: 0;
@@ -12,266 +13,149 @@
         }
 
         body {
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            /* black background for high contrast */
-            background: #000; /* solid black */
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at center, #1a0530 0%, #050505 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            color: #fff;
+            color: #f0e6ff;
         }
 
         .container {
-            background: #000;
-            border: 3px solid #ff69b4; /* neon pink */
-            border-radius: 10px;
+            background: rgba(26, 10, 46, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid #9d50ff;
+            border-radius: 20px;
             padding: 40px;
-            max-width: 900px; /* bigger main frame */
+            max-width: 900px;
             width: 100%;
-            box-shadow: 
-                0 0 10px #ff69b4,
-                0 0 20px #ff69b4,
-                0 0 30px #ff69b4,
-                0 0 40px #ff69b4,
-                0 0 70px #ff69b4,
-                0 0 100px #ff69b4,
-                inset 0 0 20px rgba(255, 105, 180, 0.2);
+            box-shadow: 0 0 40px rgba(157, 80, 255, 0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
-            animation: flickerGlow 0.4s step-start infinite;
-        }
-
-        @keyframes flickerGlow {
-            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-                box-shadow: 
-                    0 0 10px #ff69b4,
-                    0 0 20px #ff69b4,
-                    0 0 30px #ff69b4,
-                    0 0 40px #ff69b4,
-                    0 0 70px #ff69b4,
-                    0 0 100px #ff69b4,
-                    inset 0 0 20px rgba(255, 105, 180, 0.2);
-            }
-            20%, 24%, 55% {
-                box-shadow: 
-                    0 0 5px #ff69b4,
-                    0 0 10px #ff69b4,
-                    inset 0 0 10px rgba(255, 105, 180, 0.1);
-            }
         }
 
         h1 {
             font-size: 2.5em;
-            color: #ff69b4; /* bright pink */
-            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4;
+            color: #9d50ff;
+            text-shadow: 0 0 20px rgba(157, 80, 255, 0.5);
             margin-bottom: 30px;
-            letter-spacing: 3px;
-            animation: glow 2s ease-in-out infinite;
-            /* keep header centered across container */
-            width: 100%;
+            font-weight: 900;
             text-align: center;
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4;
-            }
-            50% {
-                text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4;
-            }
+            letter-spacing: 2px;
         }
 
         .excuse-box {
-            background: #111;
-            border: 3px solid #cc8899; /* soft pink solid frame */
-            border-radius: 8px;
-            padding: 30px;
-            margin: 0 0 40px 0;
-            min-height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+            min-height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
             width: 100%;
+            text-align: center;
         }
 
         .excuse-text {
             font-size: 1.8em;
-            font-weight: bold;
-            color: #ff69b4;
-            text-shadow: 0 0 10px #ff69b4;
+            font-weight: 700;
+            color: #ff50e0;
+            text-shadow: 0 0 10px rgba(255, 80, 224, 0.3);
             line-height: 1.4;
-            animation: fadeInText 0.8s ease-out;
-            word-wrap: break-word;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        @keyframes fadeInText {
-            0% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes typeWriter {
-            from {
-                width: 0;
-            }
-            to {
-                width: 100%;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .button-group {
             display: flex;
-            flex-direction: column;
             gap: 15px;
+            width: 100%;
             justify-content: center;
-            align-items: center;
             flex-wrap: wrap;
         }
 
-        button {
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            font-size: 1.1em;
-            font-weight: bold;
+        button, .lang-select {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
             padding: 15px 30px;
-            border: 3px solid #ff69b4;
-            background: #ff69b4;
-            color: #000;
+            border: none;
+            border-radius: 12px;
             cursor: pointer;
-            border-radius: 5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
-            width: 100%;
-            text-align: center;
+            letter-spacing: 1px;
         }
 
-        button:hover {
-            background: #f7a0d2;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(204, 136, 153, 0.8);
-            text-shadow: 0 0 5px #000;
+        #generateBtn {
+            background: linear-gradient(135deg, #9d50ff, #ff50e0);
+            color: white;
+            flex: 2;
+            min-width: 250px;
+            box-shadow: 0 10px 20px rgba(157, 80, 255, 0.3);
         }
 
-        button:active {
-            transform: scale(0.98);
+        #generateBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 80, 224, 0.4);
         }
 
         .copy-btn {
-            border-color: #ff69b4;
-            background: #ff69b4;
-            color: #000;
-            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f0e6ff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex: 1;
+            min-width: 200px;
         }
 
         .copy-btn:hover {
-            background: #ff84c8;
-            box-shadow: 0 0 20px rgb(255, 101, 173);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ff50e0;
         }
 
         .lang-select {
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 15px 30px;
-            border: 3px solid #ff69b4;
-            background: #ff69b4;
-            color: #000;
-            border-radius: 5px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
-            appearance: none;
-            width: 100%;
-            text-align: center;
-        }
-
-        .lang-select:hover {
-            background: #ff84c8;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
-        }
-
-        .lang-select:active {
-            transform: scale(0.98);
-        }
-
-        .lang-select option {
-            background: #000;
-            color: #ff69b4;
+            background: #1a0a2e;
+            color: #9d50ff;
+            border: 1px solid #9d50ff;
+            padding: 15px 20px;
+            outline: none;
         }
 
         .feedback {
-            color: #ff69b4;
-            font-size: 0.9em;
-            margin-top: 10px;
-            height: 20px;
-            animation: fadeInOut 1.5s ease-in-out;
-        }
-
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-
-        .hidden {
-            display: none;
+            color: #9d50ff;
+            font-weight: 700;
+            margin-top: 20px;
+            height: 24px;
         }
 
         .footer {
-            margin-top: 30px;
-            font-size: 0.8em;
-            color: #ff69b4;
-            text-shadow: 0 0 5px #ff69b4;
+            margin-top: 40px;
+            color: #b3a1cc;
+            font-size: 0.9em;
         }
 
         @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .excuse-text {
-                font-size: 1.3em;
-            }
-
-            button {
-                padding: 12px 20px;
-                font-size: 0.9em;
-            }
+            h1 { font-size: 1.8em; }
+            .excuse-text { font-size: 1.3em; }
+            .button-group { flex-direction: column; }
+            #generateBtn, .copy-btn, .lang-select { width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌸EXCUSE GENERATOR🌸</h1>
+        <h1>EXCUSE GENERATOR</h1>
         <div class="excuse-box">
-            <div class="excuse-text" id="excuseText">Click "Generate" to create an excuse!</div>
+            <div class="excuse-text" id="excuseText">Loading excuses...</div>
         </div>
         <div class="button-group">
             <select id="langSelect" class="lang-select">
@@ -280,7 +164,7 @@
                 <option value="et">Eesti</option>
             </select>
             <button id="generateBtn">Generate Excuse</button>
-            <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+            <button class="copy-btn" id="copyBtn">Copy</button>
         </div>
         <div class="feedback" id="feedback"></div>
         <div class="footer">
@@ -289,166 +173,21 @@
     </div>
 
     <script>
-        // Excuse parts arrays by language
         const excuses = {
             en: {
-                starters: [
-                    "I can't deploy because",
-                    "The bug exists because",
-                    "My code doesn't work because",
-                    "The server crashed because",
-                    "I missed the deadline because",
-                    "This feature is broken because",
-                    "My tests are failing because",
-                    "The API is down because",
-                    "My laptop exploded because",
-                    "The database got corrupted because",
-                    "My IDE won't start because",
-                    "Git lost all my commits because"
-                ],
-                middles: [
-                    "a rogue semicolon",
-                    "a sentient rubber duck",
-                    "quantum fluctuations in the code",
-                    "my code caught a virus",
-                    "the WiFi is powered by hamsters",
-                    "Stack Overflow is being used as a fortune teller",
-                    "a time-traveling bug from the future",
-                    "my coffee made a decision to become water",
-                    "the JavaScript gods demanded a sacrifice",
-                    "a gremlins' convention in my RAM",
-                    "a mysterious cosmic ray",
-                    "the intern pushed to main again",
-                    "ChatGPT wrote the wrong answer",
-                    "my keyboard is on strike",
-                    "the moon is in retrograde",
-                    "a ghost in the machine",
-                    "my Windows Update needs an update",
-                    "the <div> decided to unionize"
-                ],
-                endings: [
-                    "and now nothing makes sense anymore.",
-                    "and I've accepted my fate.",
-                    "and I'm not sure who's to blame.",
-                    "and I've decided to become a farmer.",
-                    "and honestly, I don't understand it either.",
-                    "and the code has achieved sentience.",
-                    "and I'm now living in the server room.",
-                    "and physics no longer applies.",
-                    "and I've made my peace with it.",
-                    "and I can't look my team in the eye.",
-                    "and I've started a support group.",
-                    "and the error message just says 'lol'.",
-                    "and now I smell burnt electronics.",
-                    "and we're switching to COBOL.",
-                    "and I'm updating my resume."
-                ]
+                starters: ["I can't deploy because", "The bug exists because", "My code doesn't work because", "The server crashed because", "I missed the deadline because"],
+                middles: ["a rogue semicolon", "a sentient rubber duck", "quantum fluctuations", "the WiFi is powered by hamsters", "a mysterious cosmic ray"],
+                endings: ["and now nothing makes sense.", "and I've accepted my fate.", "and I'm not sure who's to blame.", "and physics no longer applies."]
             },
             ru: {
-                starters: [
-                    "Я не могу деплоить, потому что",
-                    "Баг существует, потому что",
-                    "Мой код не работает, потому что",
-                    "Сервер упал, потому что",
-                    "Я пропустил дедлайн, потому что",
-                    "Эта функция сломана, потому что",
-                    "Мои тесты падают, потому что",
-                    "API недоступно, потому что",
-                    "Мой ноутбук взорвался, потому что",
-                    "База данных повреждена, потому что",
-                    "Мой IDE не запускается, потому что",
-                    "Git потерял все мои коммиты, потому что"
-                ],
-                middles: [
-                    "коварная точка с запятой",
-                    "сознательная резиновая утка",
-                    "квантовые флуктуации в коде",
-                    "мой код подхватил вирус",
-                    "WiFi работает на хомячках",
-                    "Stack Overflow используется как гадалка",
-                    "временной баг из будущего",
-                    "мой кофе решил стать водой",
-                    "боги JavaScript потребовали жертву",
-                    "съезд гремлинов в моей памяти",
-                    "таинственный космический луч",
-                    "стажер снова запушил в main",
-                    "ChatGPT дал неправильный ответ",
-                    "моя клавиатура бастует",
-                    "луна в ретрограде",
-                    "привидение в машине",
-                    "мое Обновление Windows нуждается в обновлении",
-                    "<div> решил создать профсоюз"
-                ],
-                endings: [
-                    "и теперь ничего не имеет смысла.",
-                    "и я принял свою судьбу.",
-                    "и я не уверен, кто виноват.",
-                    "и я решил стать фермером.",
-                    "и честно говоря, я тоже не понимаю.",
-                    "и код достиг сознания.",
-                    "и теперь я живу в серверной комнате.",
-                    "и физика уже не применима.",
-                    "и я с этим смирился.",
-                    "и я не могу смотреть своей команде в глаза.",
-                    "и я создал группу поддержки.",
-                    "и сообщение об ошибке просто говорит 'lol'.",
-                    "и теперь я чувствую запах паленой электроники.",
-                    "и мы переходим на COBOL.",
-                    "и я прямо сейчас обновляю свое резюме."
-                ]
+                starters: ["Я не могу деплоить, потому что", "Баг существует, потому что", "Мой код не работает, потому что", "Сервер упал, потому что", "Я пропустил дедлайн, потому что"],
+                middles: ["коварная точка с запятой", "сознательная резиновая утка", "квантовые флуктуации", "WiFi работает на хомячках", "таинственный космический луч"],
+                endings: ["и теперь ничего не имеет смысла.", "и я принял свою судьбу.", "и я не уверен, кто виноват.", "и физика уже не применима."]
             },
             et: {
-                starters: [
-                    "Ma ei saa tegelda, sest",
-                    "Viga on olemas, sest",
-                    "Minu kood ei tööta, sest",
-                    "Server kukkus, sest",
-                    "Ma jätin tähtaja tähtaegaks, sest",
-                    "See funktsioon on katki, sest",
-                    "Minu testid ebaõnnestuvad, sest",
-                    "API ei ole saadaval, sest",
-                    "Mu sülearvuti plahvatas, sest",
-                    "Andmebaas on kahjustatud, sest",
-                    "Minu IDE ei käivitu, sest",
-                    "Git kaotas kõik minu komiidid, sest"
-                ],
-                middles: [
-                    "hullumeelne semikoolon",
-                    "teadlik kummkacna",
-                    "kvantumkõikumised koodis",
-                    "minu kood nakatutas viirusega",
-                    "WiFi töötab hamstrite jõul",
-                    "Stack Overflow'i kasutatakse nõianaistena",
-                    "aegreisi viga tulevikust",
-                    "minu kohvi otsustas veeks saada",
-                    "JavaScripti jumalad nõudsid ohvrit",
-                    "gremlinite konventsioon minu RAM-is",
-                    "müsteerium kosmilise kiire",
-                    "stage tõi taas repo välja",
-                    "ChatGPT kirjutas vale vastuse",
-                    "minu klaviatuur streigib",
-                    "kuu on retrograadis",
-                    "kummitus masinas",
-                    "mu Windowsi Update vajab uuendust",
-                    "<div> otsustas liituda ametiühinguga"
-                ],
-                endings: [
-                    "ja nüüd pole midagi mõtet.",
-                    "ja ma olen oma saatusega rahul.",
-                    "ja ma ei tea, kes süüdi on.",
-                    "ja otsustsin talumeheks saada.",
-                    "ja ausalt öeldes, ma ka ei saa aru.",
-                    "ja kood saavutas teadlikkuse.",
-                    "ja nüüd elen serverites.",
-                    "ja füüsika ei kehti enam.",
-                    "ja olen selle rahuks võtnud.",
-                    "ja ma ei saa oma meeskonnale silmadesse vaadata.",
-                    "ja olen loonud toetusgrupi.",
-                    "ja veateateis lihtsalt kirjas 'lol'.",
-                    "ja nüüd haisu põletatud elektroonikat.",
-                    "ja me läheme üle COBOL-ile.",
-                    "ja ma parajasti uuendan oma CV-d."
-                ]
+                starters: ["Ma ei saa tegelda, sest", "Viga on olemas, sest", "Minu kood ei tööta, sest", "Server kukkus, sest", "Ma jäin hiljaks, sest"],
+                middles: ["hullumeelne semikoolon", "teadlik kummipart", "kvantumkõikumised", "WiFi töötab hamstrite jõul", "müsteerium kosmilise kiire"],
+                endings: ["ja nüüd pole midagi mõtet.", "ja ma olen oma saatusega rahul.", "ja ma ei tea, kes süüdi on.", "ja füüsika ei kehti enam."]
             }
         };
 
@@ -458,105 +197,29 @@
         const feedback = document.getElementById('feedback');
         const langSelect = document.getElementById('langSelect');
 
-        const translations = {
-            en: {
-                generate: "Generate Excuse",
-                copy: "Copy to Clipboard",
-                placeholder: 'Click "Generate" to create an excuse!',
-                feedbackGenerateFirst: "Generate an excuse first!",
-                feedbackCopied: "✓ Copied to clipboard!",
-                feedbackFailed: "Failed to copy :("
-            },
-            ru: {
-                generate: "Сгенерировать оправдание",
-                copy: "Копировать в буфер обмена",
-                placeholder: 'Нажмите «Генерировать», чтобы создать оправдание!',
-                feedbackGenerateFirst: "Сначала сгенерируйте оправдание!",
-                feedbackCopied: "✓ Скопировано!",
-                feedbackFailed: "Не удалось скопировать :("
-            },
-            et: {
-                generate: "Genereeri vabandus",
-                copy: "Kopeeri lõikelauale",
-                placeholder: 'Klõpsa "Genereeri", et luua vabandus!',
-                feedbackGenerateFirst: "Esmalt loo vabandus!",
-                feedbackCopied: "✓ Kopeeritud!",
-                feedbackFailed: "Kopeerimine ebaõnnestus :("
-            }
-        };
-
         let currentLang = 'en';
 
-        function updateLanguage() {
-            const t = translations[currentLang];
-            generateBtn.textContent = t.generate;
-            copyBtn.textContent = t.copy;
-            excuseText.textContent = t.placeholder;
+        function generate() {
+            const set = excuses[currentLang];
+            const text = `${set.starters[Math.floor(Math.random()*set.starters.length)]} ${set.middles[Math.floor(Math.random()*set.middles.length)]} ${set.endings[Math.floor(Math.random()*set.endings.length)]}`;
+            excuseText.textContent = text;
+            feedback.textContent = '';
         }
 
-        langSelect.addEventListener('change', () => {
-            currentLang = langSelect.value;
-            updateLanguage();
-            hideFeedback();
+        langSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            generate();
         });
 
-        function getRandomElement(array) {
-            return array[Math.floor(Math.random() * array.length)];
-        }
-
-        function generateExcuse() {
-            const excuseSet = excuses[currentLang];
-            const starter = getRandomElement(excuseSet.starters);
-            const middle = getRandomElement(excuseSet.middles);
-            const ending = getRandomElement(excuseSet.endings);
-
-            const excuse = `${starter} ${middle} ${ending}`;
-            
-            // Reset animation by removing and re-adding class
-            excuseText.style.animation = 'none';
-            
-            setTimeout(() => {
-                excuseText.textContent = excuse;
-                excuseText.style.animation = '';
-            }, 10);
-
-            hideFeedback();
-        }
-
-        function copyToClipboard() {
-            const text = excuseText.textContent;
-            const t = translations[currentLang];
-            
-            if (text === t.placeholder) {
-                showFeedback(t.feedbackGenerateFirst);
-                return;
-            }
-
-            navigator.clipboard.writeText(text).then(() => {
-                showFeedback(t.feedbackCopied);
-            }).catch(() => {
-                showFeedback(t.feedbackFailed);
+        generateBtn.addEventListener('click', generate);
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(excuseText.textContent).then(() => {
+                feedback.textContent = '✓ Copied!';
+                setTimeout(() => feedback.textContent = '', 2000);
             });
-        }
-
-        function showFeedback(message) {
-            feedback.textContent = message;
-            feedback.classList.remove('hidden');
-        }
-
-        function hideFeedback() {
-            feedback.classList.add('hidden');
-        }
-
-        // Event listeners
-        generateBtn.addEventListener('click', generateExcuse);
-        copyBtn.addEventListener('click', copyToClipboard);
-
-        // Initialize language and generate first excuse on page load
-        window.addEventListener('load', () => {
-            updateLanguage();
-            generateExcuse();
         });
+
+        generate();
     </script>
 </body>
 </html>
