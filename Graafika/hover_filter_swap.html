@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hover Filter Swap - Filtrite Maailm</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --text-color: #ffffff;
+            --accent-neon: #00ffcc;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 200;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin: 0;
+            background: linear-gradient(to right, #666, #fff, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            opacity: 0.5;
+            margin-top: 10px;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            width: 90%;
+            max-width: 1200px;
+            padding-bottom: 100px;
+        }
+
+        .item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #111;
+            aspect-ratio: 16 / 10;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* 1. Must-valgest värviliseks */
+        .grayscale-to-color img {
+            filter: grayscale(100%) brightness(0.8);
+        }
+        .grayscale-to-color:hover img {
+            filter: grayscale(0%) brightness(1);
+            transform: scale(1.05);
+        }
+
+        /* 2. Negatiiv/Inverteeritud efekt */
+        .normal-to-invert img {
+            filter: brightness(1);
+        }
+        .normal-to-invert:hover img {
+            filter: invert(100%) hue-rotate(180deg);
+            transform: scale(1.05);
+        }
+
+        /* 3. Seepiast neoon-sini-lillaks */
+        .sepia-to-neon img {
+            filter: sepia(100%) contrast(1.2);
+        }
+        .sepia-to-neon:hover img {
+            filter: sepia(0%) hue-rotate(250deg) saturate(300%) brightness(1.2);
+            transform: scale(1.05);
+        }
+
+        /* 4. Udust teravaks */
+        .blur-to-clear img {
+            filter: blur(10px) brightness(0.5);
+        }
+        .blur-to-clear:hover img {
+            filter: blur(0px) brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        .caption {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 2;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        .caption h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .caption p {
+            margin: 5px 0 0;
+            font-size: 0.75rem;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        .item:hover .caption {
+            transform: translateY(-5px);
+        }
+
+        /* Dekoratiivne nurk */
+        .item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid rgba(255,255,255,0);
+            border-radius: 12px;
+            transition: border-color 0.4s ease;
+            pointer-events: none;
+        }
+
+        .item:hover::after {
+            border-color: rgba(255,255,255,0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Filter Swap</h1>
+        <p class="subtitle">Liiguta hiir piltidele, et muuta nende olemust</p>
+    </header>
+
+    <div class="gallery">
+        <div class="item grayscale-to-color">
+            <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=800" alt="Nature">
+            <div class="caption">
+                <h3>Värvide Ärkamine</h3>
+                <p>Grayscale → Full Color</p>
+            </div>
+        </div>
+
+        <div class="item normal-to-invert">
+            <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&q=80&w=800" alt="Cyber">
+            <div class="caption">
+                <h3>Süsteemi Viga</h3>
+                <p>Normal → Inverted</p>
+            </div>
+        </div>
+
+        <div class="item sepia-to-neon">
+            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=800" alt="Abstract">
+            <div class="caption">
+                <h3>Tuleviku Mälestus</h3>
+                <p>Sepia → Neon Blue</p>
+            </div>
+        </div>
+
+        <div class="item blur-to-clear">
+            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800" alt="Paris">
+            <div class="caption">
+                <h3>Selgushetk</h3>
+                <p>Blur → Sharp Focus</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

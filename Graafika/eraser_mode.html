@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eraser Mode - Kustutuskumm</title>
+    <style>
+        :root {
+            --bg-color: #000;
+            --eraser-size: 50px;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Taustal olev peidetud pilt (Masterpiece) */
+        .hidden-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920') no-repeat center/cover;
+            z-index: 1;
+        }
+
+        /* Kustutuskummi kiht (Võrk mis katab pilti) */
+        #eraser-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            z-index: 10;
+        }
+
+        /* Üksik ruuduke (tile) */
+        .tile {
+            background-color: #1e293b; /* Tumehall "udu" */
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s ease;
+            box-shadow: inset 0 0 1px rgba(255,255,255,0.05); /* Väga õrn võrgustik */
+        }
+
+        /* Kustutatud seisund */
+        .tile.erased {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none; /* Pärast kustutamist ei saa enam "pihta" */
+        }
+
+        /* UI elemendid */
+        .ui-layer {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .ui-layer button {
+            pointer-events: auto;
+            padding: 14px 34px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 100px;
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .ui-layer button:hover {
+            background: white;
+            color: black;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            font-weight: 200;
+            margin-bottom: 25px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        /* Ringikujuline indikaator hiire ümber */
+        .cursor-indicator {
+            position: fixed;
+            width: var(--eraser-size);
+            height: var(--eraser-size);
+            border: 1.5px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference; /* Et oleks näha nii mustal kui valgel */
+            transition: width 0.2s, height 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hidden-image"></div>
+    <div id="eraser-grid"></div>
+    <div class="cursor-indicator" id="cursor"></div>
+
+    <div class="ui-layer">
+        <h1>Eraser Mode</h1>
+        <button id="resetBtn">Taasta kate</button>
+    </div>
+
+    <script>
+        const grid = document.getElementById('eraser-grid');
+        const resetBtn = document.getElementById('resetBtn');
+        const cursor = document.getElementById('cursor');
+
+        // Grid-i seadistused
+        const tileSize = 45; // Ruudu suurus pikslites
+        let tiles = [];
+
+        function createGrid() {
+            grid.innerHTML = '';
+            tiles = [];
+            
+            const cols = Math.ceil(window.innerWidth / tileSize);
+            const rows = Math.ceil(window.innerHeight / tileSize);
+            
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+            const totalTiles = cols * rows;
+
+            for (let i = 0; i < totalTiles; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                
+                // Hiirega ülesõit "kustutab" ruudu
+                tile.addEventListener('mouseenter', () => {
+                    tile.classList.add('erased');
+                });
+
+                grid.appendChild(tile);
+                tiles.push(tile);
+            }
+        }
+
+        // Algne loomine
+        createGrid();
+        
+        // Debounce resize jaoks, et mitte grid-i liiga tihti uuesti luua
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(createGrid, 200);
+        });
+
+        // Kursori liigutamine
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Reset nupp
+        resetBtn.addEventListener('click', () => {
+            tiles.forEach(tile => {
+                tile.classList.remove('erased');
+            });
+        });
+
+        // Puuteekraani tugi
+        window.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            cursor.style.left = touch.clientX + 'px';
+            cursor.style.top = touch.clientY + 'px';
+            
+            // Leiame elemendi puute asukohas
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('tile')) {
+                element.classList.add('erased');
+            }
+        }, { passive: false });
+
+    </script>
+</body>
+</html>

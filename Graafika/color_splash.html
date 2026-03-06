@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Splash - Värvikas Plahvatus</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #1e293b;
+            margin: 0;
+            font-weight: 200;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        p {
+            color: #64748b;
+            letter-spacing: 2px;
+            margin-top: 15px;
+        }
+
+        #clearBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 12px 24px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: all 0.2s;
+        }
+
+        #clearBtn:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instructions" id="hint">
+        <h1>Color Splash</h1>
+        <p>Hoidke hiirenuppu all, et värvi "valada"</p>
+    </div>
+
+    <button id="clearBtn">Puhasta lõuend</button>
+    <canvas id="splashCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('splashCanvas');
+        const ctx = canvas.getContext('2d');
+        const hint = document.getElementById('hint');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let isPressing = false;
+        let currentSplash = null;
+        const splashes = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            redraw();
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Splash {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 0;
+                this.maxGrowth = 6; // Algne kasvukiirus
+                this.isGrowing = true;
+                // Ebakorrapärasuse tekitamiseks juhuslikud raadiuse kordajad
+                this.points = [];
+                for(let i=0; i<16; i++) {
+                    this.points.push(0.85 + Math.random() * 0.3);
+                }
+            }
+
+            grow() {
+                if (this.isGrowing) {
+                    this.radius += this.maxGrowth;
+                    // Mida suuremaks laik saab, seda aeglasemaks muutub voolamine
+                    if (this.maxGrowth > 0.5) this.maxGrowth *= 0.992;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                
+                const angleStep = (Math.PI * 2) / this.points.length;
+                
+                // Joonistame ebakorrapärase laigu kasutades siinust/koosinust ja juhuslikke punkte
+                for (let i = 0; i <= this.points.length; i++) {
+                    const idx = i % this.points.length;
+                    const r = this.radius * this.points[idx];
+                    const angle = i * angleStep;
+                    const x = this.x + Math.cos(angle) * r;
+                    const y = this.y + Math.sin(angle) * r;
+                    
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function getRandColor() {
+            const colors = [
+                'rgba(56, 189, 248, 0.65)', // Sky blue
+                'rgba(244, 63, 94, 0.65)',  // Rose
+                'rgba(16, 185, 129, 0.65)', // Emerald
+                'rgba(245, 158, 11, 0.65)', // Amber
+                'rgba(139, 92, 246, 0.65)', // Violet
+                'rgba(236, 72, 153, 0.65)', // Pink
+                'rgba(6, 182, 212, 0.65)',  // Cyan
+                'rgba(132, 204, 22, 0.65)'  // Lime
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function handleStart(e) {
+            // Väldime puhastamise nupu peale klikkimist
+            if (e.target.tagName === 'BUTTON') return;
+
+            isPressing = true;
+            hint.style.opacity = '0.1';
+            
+            const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            
+            currentSplash = new Splash(x, y, getRandColor());
+            splashes.push(currentSplash);
+        }
+
+        function handleEnd() {
+            isPressing = false;
+            if (currentSplash) {
+                currentSplash.isGrowing = false;
+                currentSplash = null;
+            }
+        }
+
+        window.addEventListener('mousedown', handleStart);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Joonistame kõik salvestatud laigud (viimane on kõige peal)
+            splashes.forEach(s => s.draw());
+        }
+
+        function animate() {
+            if (isPressing && currentSplash) {
+                currentSplash.grow();
+                redraw();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        clearBtn.addEventListener('click', () => {
+            splashes.length = 0;
+            redraw();
+            hint.style.opacity = '1';
+        });
+
+        animate();
+    </script>
+</body>
+</html>

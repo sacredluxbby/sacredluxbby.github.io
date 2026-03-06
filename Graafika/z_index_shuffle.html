@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Index Shuffle - Kihtide Mäng</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 40px;
+            text-align: center;
+            width: 100%;
+            opacity: 0.4;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 1000000; /* See on alati kõige peal */
+        }
+
+        .container {
+            position: relative;
+            width: 550px;
+            height: 550px;
+        }
+
+        /* Kihiline kaart */
+        .card {
+            position: absolute;
+            width: 320px;
+            height: 420px;
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        box-shadow 0.3s ease, 
+                        border-color 0.3s ease;
+            user-select: none;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Algpositsioonid ja värvid */
+        .c1 { background: linear-gradient(135deg, #3b82f6, #1e40af); transform: translate(0px, 0px); }
+        .c2 { background: linear-gradient(135deg, #ef4444, #991b1b); transform: translate(40px, 40px); }
+        .c3 { background: linear-gradient(135deg, #10b981, #065f46); transform: translate(80px, 80px); }
+        .c4 { background: linear-gradient(135deg, #f59e0b, #92400e); transform: translate(120px, 120px); }
+        .c5 { background: linear-gradient(135deg, #8b5cf6, #5b21b6); transform: translate(160px, 160px); }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Aktiivne (viimati klõpsatud) kaart */
+        .card.active {
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .card h2 {
+            font-size: 5rem;
+            margin: 0;
+            opacity: 0.15;
+            font-weight: 900;
+        }
+
+        .card p {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+
+        /* Z-indeksi info */
+        .z-info {
+            position: absolute;
+            bottom: 25px;
+            background: rgba(0,0,0,0.25);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Klikkimise animatsioon */
+        .card:active {
+            transform: translate(var(--tx), var(--ty)) scale(0.95) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instructions">Klõpsa kaartidel, et muuta kihtide järjekorda</div>
+
+    <div class="container" id="cardContainer">
+        <div class="card c1" data-tx="0" data-ty="0">
+            <h2>01</h2>
+            <p>Sinine</p>
+            <div class="z-info">Layer: 1</div>
+        </div>
+        <div class="card c2" data-tx="40" data-ty="40">
+            <h2>02</h2>
+            <p>Punane</p>
+            <div class="z-info">Layer: 2</div>
+        </div>
+        <div class="card c3" data-tx="80" data-ty="80">
+            <h2>03</h2>
+            <p>Roheline</p>
+            <div class="z-info">Layer: 3</div>
+        </div>
+        <div class="card c4" data-tx="120" data-ty="120">
+            <h2>04</h2>
+            <p>Oranž</p>
+            <div class="z-info">Layer: 4</div>
+        </div>
+        <div class="card c5" data-tx="160" data-ty="160">
+            <h2>05</h2>
+            <p>Lilla</p>
+            <div class="z-info">Layer: 5</div>
+        </div>
+    </div>
+
+    <script>
+        const cards = document.querySelectorAll('.card');
+        let currentMaxZ = 5;
+
+        // Seadistame algsed transformid ja z-indeksid
+        cards.forEach((card, index) => {
+            const tx = card.getAttribute('data-tx');
+            const ty = card.getAttribute('data-ty');
+            card.style.transform = `translate(${tx}px, ${ty}px)`;
+            card.style.zIndex = index + 1;
+
+            card.addEventListener('mousedown', () => {
+                // Suurendame globaalset kihtide loendurit
+                currentMaxZ++;
+                
+                // Rakendame uue z-indexi valitud kaardile
+                card.style.zIndex = currentMaxZ;
+                
+                // Uuendame tekstilist infot kaardil
+                card.querySelector('.z-info').innerText = `Layer: ${currentMaxZ}`;
+                
+                // Lisame visuaalse efekti
+                cards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                // Väike "pop" efekt skaleerimisega
+                const tx = card.getAttribute('data-tx');
+                const ty = card.getAttribute('data-ty');
+                
+                // Teeme kiire animatsiooni
+                card.style.transform = `translate(${tx}px, ${ty}px) scale(1.1)`;
+                setTimeout(() => {
+                    card.style.transform = `translate(${tx}px, ${ty}px) scale(1.05)`;
+                }, 150);
+            });
+        });
+    </script>
+</body>
+</html>

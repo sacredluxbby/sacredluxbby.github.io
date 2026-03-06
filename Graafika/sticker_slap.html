@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticker Slap - Kleebiste Maailm</title>
+    <style>
+        :root {
+            --bg-color: #1e1e2e;
+            --surface-color: #2a2a3d;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            /* Pinna tekstuuri efekt */
+            background-image: radial-gradient(var(--surface-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            cursor: crosshair;
+        }
+
+        /* Juhiste kiht */
+        .overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+
+        .overlay h1 {
+            font-size: 6vw;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 15px;
+            font-weight: 900;
+        }
+
+        /* Kleebise stiil */
+        .sticker {
+            position: absolute;
+            padding: 12px;
+            background: white;
+            border: 5px solid white;
+            border-radius: 18px;
+            font-size: 3.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 6px 10px 0px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+            cursor: grab;
+            user-select: none;
+            z-index: 10;
+            /* "Slap" animatsioon */
+            animation: slap 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            will-change: transform;
+        }
+
+        .sticker:active {
+            cursor: grabbing;
+        }
+
+        @keyframes slap {
+            0% { 
+                transform: translate(-50%, -50%) scale(2.5); 
+                opacity: 0; 
+                filter: brightness(2);
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1) rotate(var(--rot)); 
+                opacity: 1; 
+                filter: brightness(1);
+            }
+        }
+
+        /* Kleebise esiletõstmine hoveril */
+        .sticker:hover {
+            z-index: 1000 !important;
+            box-shadow: 8px 14px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Puhastamise nupp */
+        .clear-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f38ba8;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .clear-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+            background: #e64553;
+        }
+
+        .clear-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay">
+        <h1>STICKER SLAP</h1>
+        <p>KLÕPSA IGAL POOL, ET KLEEPIDA</p>
+    </div>
+
+    <button class="clear-btn" id="clearBtn">Puhasta laud</button>
+
+    <script>
+        const stickerList = [
+            '🚀', '🌈', '🍦', '🍕', '🎮', '🎸', '🐱', '🦄', 
+            '💎', '🔥', '🎨', '🥑', '👾', '🛹', '🍩', '🦊',
+            '⚡', '🍄', '🍔', '🥝', '🛸', '👻', '👑', '🍒',
+            '🍎', '🎈', '🐯', '🐧', '🎸', '🥨', '🍪', '🥤'
+        ];
+
+        let audioCtx;
+        let stickerCount = 0;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Genereerime "slap" heli reaalajas
+        function playSlapSound() {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'square'; // Teravam heli
+            oscillator.frequency.setValueAtTime(180, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            // Ära kleebi, kui vajutatakse nupule
+            if (e.target.tagName === 'BUTTON') return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            createSticker(x, y);
+            playSlapSound();
+        });
+
+        function createSticker(x, y) {
+            stickerCount++;
+            const sticker = document.createElement('div');
+            sticker.classList.add('sticker');
+            
+            // Juhuslik emoji
+            sticker.textContent = stickerList[Math.floor(Math.random() * stickerList.length)];
+
+            // Juhuslik pööre -35 kuni 35 kraadi
+            const rotation = (Math.random() * 70) - 35;
+            sticker.style.setProperty('--rot', `${rotation}deg`);
+
+            // Juhuslik suurus
+            const size = 0.8 + Math.random() * 0.6;
+            sticker.style.fontSize = `${3.5 * size}rem`;
+            sticker.style.padding = `${12 * size}px`;
+
+            // Asukoht
+            sticker.style.left = `${x}px`;
+            sticker.style.top = `${y}px`;
+            sticker.style.zIndex = stickerCount;
+
+            document.body.appendChild(sticker);
+
+            // Lohistamise funktsionaalsus
+            let isDragging = false;
+            let offset = { x: 0, y: 0 };
+
+            sticker.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                isDragging = true;
+                const rect = sticker.getBoundingClientRect();
+                offset.x = e.clientX - rect.left - rect.width / 2;
+                offset.y = e.clientY - rect.top - rect.height / 2;
+                sticker.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                sticker.style.left = `${e.clientX - offset.x}px`;
+                sticker.style.top = `${e.clientY - offset.y}px`;
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+                sticker.style.cursor = 'grab';
+            });
+        }
+
+        // Puhastamise funktsioon
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            const allStickers = document.querySelectorAll('.sticker');
+            allStickers.forEach((s, i) => {
+                setTimeout(() => {
+                    s.style.transition = 'all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045)';
+                    s.style.transform = 'translate(-50%, -50%) scale(0) rotate(360deg)';
+                    s.style.opacity = '0';
+                    setTimeout(() => s.remove(), 400);
+                }, i * 20); // Efektne järkjärguline eemaldamine
+            });
+            stickerCount = 0;
+        });
+    </script>
+</body>
+</html>

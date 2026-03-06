@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor Trail - Geomeetriline Jälg</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .content {
+            z-index: 2;
+            text-align: center;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 0.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <h1>Cursor Trail</h1>
+        <p>Liiguta hiirt, et näha geomeetrilist jälge</p>
+    </div>
+
+    <canvas id="trailCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('trailCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let particles = [];
+        let hue = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                // Juhuslik suurus vahemikus 5 kuni 20
+                this.size = Math.random() * 15 + 5;
+                // Juhuslik liikumiskiirus
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                // Juhuslik värv põhinedes hue väärtusel
+                this.color = `hsla(${hue}, 100%, 70%, 0.8)`;
+                // Pööramine
+                this.angle = Math.random() * Math.PI * 2;
+                this.spin = Math.random() * 0.2 - 0.1;
+                // Kujundi tüüp: 0 = Ruut, 1 = Ring, 2 = Kolmnurk
+                this.shapeType = Math.floor(Math.random() * 3);
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.angle += this.spin;
+                // Vähendame suurust, et kujund järk-järgult kaoks
+                if (this.size > 0.2) this.size -= 0.15;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+
+                ctx.beginPath();
+                if (this.shapeType === 0) {
+                    // Ruut
+                    ctx.rect(-this.size / 2, -this.size / 2, this.size, this.size);
+                } else if (this.shapeType === 1) {
+                    // Ring
+                    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                } else {
+                    // Kolmnurk
+                    ctx.moveTo(0, -this.size / 2);
+                    ctx.lineTo(this.size / 2, this.size / 2);
+                    ctx.lineTo(-this.size / 2, this.size / 2);
+                    ctx.closePath();
+                }
+                
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function handleParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Eemaldame liiga väikesed osakesed
+                if (particles[i].size <= 0.2) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            // Lisame osakesi hiire liikumisel
+            for (let i = 0; i < 2; i++) {
+                particles.push(new Particle(e.clientX, e.clientY));
+            }
+            hue += 3; // Muudame värvi jooksvalt
+        });
+
+        // Puutetundlikkuse tugi
+        window.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            for (let i = 0; i < 2; i++) {
+                particles.push(new Particle(touch.clientX, touch.clientY));
+            }
+            hue += 3;
+        });
+
+        function animate() {
+            // Puhastame lõuendi igal kaadril
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            handleParticles();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

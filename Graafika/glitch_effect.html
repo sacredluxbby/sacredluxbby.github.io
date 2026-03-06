@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hover-Glitch Effect - Glitch Efekt</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #ffffff;
+            --glitch-color-1: #ff00c1;
+            --glitch-color-2: #00fff9;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            opacity: 0.5;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            animation: text-flicker 3s infinite;
+        }
+
+        /* Glitch pildi konteiner */
+        .glitch-wrapper {
+            position: relative;
+            width: 500px;
+            height: 320px;
+            background: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=500&h=320') no-repeat center/cover;
+            cursor: pointer;
+            margin: 0 auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Glitch kihid (loome pseudo-elementidega) */
+        .glitch-wrapper::before,
+        .glitch-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            display: none; /* Peidus vaikimisi */
+            mix-blend-mode: screen;
+        }
+
+        /* Hover-efekt aktiveerib animatsioonid */
+        .glitch-wrapper:hover::before {
+            display: block;
+            left: 4px;
+            animation: glitch-anim-1 0.4s infinite linear alternate-reverse;
+            filter: hue-rotate(90deg) saturate(200%);
+            opacity: 0.8;
+        }
+
+        .glitch-wrapper:hover::after {
+            display: block;
+            left: -4px;
+            animation: glitch-anim-2 0.3s infinite linear alternate-reverse;
+            filter: hue-rotate(-90deg) saturate(200%);
+            opacity: 0.8;
+        }
+
+        .glitch-wrapper:hover {
+            animation: main-shake 0.2s infinite;
+            border-color: var(--glitch-color-2);
+        }
+
+        /* Glitch animatsioonid - kasutame clip-path'i "ribade" tekitamiseks */
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 30% 0); transform: translate(-10px, 5px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(10px, -5px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-5px, 10px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(5px, -10px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-10px, 5px); }
+            100% { clip-path: inset(30% 0 20% 0); transform: translate(10px, -5px); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 80% 0); transform: translate(10px, -5px); }
+            20% { clip-path: inset(30% 0 20% 0); transform: translate(-10px, 5px); }
+            40% { clip-path: inset(50% 0 40% 0); transform: translate(5px, -10px); }
+            60% { clip-path: inset(15% 0 65% 0); transform: translate(-5px, 10px); }
+            80% { clip-path: inset(70% 0 10% 0); transform: translate(10px, -5px); }
+            100% { clip-path: inset(40% 0 50% 0); transform: translate(-10px, 5px); }
+        }
+
+        /* Kerge värin kogu pildile */
+        @keyframes main-shake {
+            0% { transform: translate(0); }
+            25% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, -2px); }
+            75% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes text-flicker {
+            0%, 100% { opacity: 0.5; }
+            92% { opacity: 0.5; }
+            93% { opacity: 0.1; }
+            94% { opacity: 0.5; }
+            95% { opacity: 0.8; }
+            96% { opacity: 0.2; }
+            97% { opacity: 0.5; }
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: var(--glitch-color-2);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Mobiili jaoks kohandamine */
+        @media (max-width: 600px) {
+            .glitch-wrapper {
+                width: 90vw;
+                height: 56vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>System Interference</h1>
+        <div class="glitch-wrapper"></div>
+        <p class="instructions">Liiguta hiir pildile (hover)</p>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key-Sound Piano - Trükkimise Muusika</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instructions {
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 200;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin: 0;
+            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            opacity: 0.5;
+            letter-spacing: 3px;
+            margin-top: 20px;
+        }
+
+        /* Ujuv täht ekraanil */
+        .floating-char {
+            position: absolute;
+            font-size: 6rem;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 5;
+            animation: float-up 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            user-select: none;
+        }
+
+        @keyframes float-up {
+            0% { transform: translate(-50%, 0%) scale(0.3); opacity: 0; }
+            20% { opacity: 1; transform: translate(-50%, -20%) scale(1.3); }
+            100% { transform: translate(-50%, -150%) scale(1); opacity: 0; }
+        }
+
+        /* Aktiveerimise nupp */
+        #welcome {
+            z-index: 100;
+        }
+
+        #startBtn {
+            padding: 22px 45px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 100px;
+            cursor: pointer;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        #startBtn:hover {
+            background: white;
+            color: black;
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Tausta kuma */
+        .glow {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow"></div>
+
+    <div id="welcome">
+        <button id="startBtn">Alusta trükkimist</button>
+    </div>
+
+    <div class="instructions hidden" id="mainUI">
+        <h1>Key Piano</h1>
+        <p>Vajuta klahve ja loo oma helimaailm</p>
+    </div>
+
+    <script>
+        const welcome = document.getElementById('welcome');
+        const mainUI = document.getElementById('mainUI');
+        const startBtn = document.getElementById('startBtn');
+
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // --- HELIDE GENERERIMINE (Web Audio API) ---
+
+        // Langev sagedus (cartoon piu)
+        function playPiu() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            const startFreq = 600 + Math.random() * 600;
+            osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Kandiline laine (8-bit heli)
+        function playBit() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400 + Math.random() * 800, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        // Trummi-laadne pop
+        function playPop() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // Harmooniline toon
+        function playHarmonic() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            const scales = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            const freq = scales[Math.floor(Math.random() * scales.length)];
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // Klahvikuulaja
+        window.addEventListener('keydown', (e) => {
+            if (!audioCtx) return;
+
+            // Vali suvaline heli
+            const rand = Math.random();
+            if (rand < 0.25) playPiu();
+            else if (rand < 0.5) playBit();
+            else if (rand < 0.75) playPop();
+            else playHarmonic();
+
+            // Loo visuaalne efekt
+            showVisualChar(e.key.toUpperCase());
+        });
+
+        function showVisualChar(char) {
+            const el = document.createElement('div');
+            el.className = 'floating-char';
+            el.textContent = char.length > 1 ? '✨' : char;
+            
+            // Juhuslik positsioon keskosas
+            const x = 20 + Math.random() * 60;
+            const y = 40 + Math.random() * 20;
+            el.style.left = x + '%';
+            el.style.top = y + '%';
+            
+            // Juhuslik värvitoon
+            const hue = Math.random() * 360;
+            el.style.color = `hsl(${hue}, 85%, 75%)`;
+            
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        // Alguse käivitamine
+        startBtn.addEventListener('click', () => {
+            initAudio();
+            welcome.classList.add('hidden');
+            mainUI.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

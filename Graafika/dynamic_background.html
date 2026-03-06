@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Background - Dünaamiline Taust</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            transition: background-color 0.3s ease-out; /* Sujuv värviüleminek */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        /* Valguslaik, mis liigub koos hiirega */
+        .glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 3rem;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            font-weight: 300;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 1rem;
+        }
+
+        .coords {
+            margin-top: 2rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow" id="glow"></div>
+
+    <div class="content">
+        <h1>Dynamic Gradient</h1>
+        <p>Taustavärv muutub vastavalt hiire asukohale ekraanil</p>
+        <div class="coords" id="coords">X: 50%, Y: 50%</div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const glow = document.getElementById('glow');
+        const coordsText = document.getElementById('coords');
+
+        // Määrame nelja nurga värvid (RGB formaadis)
+        const corners = {
+            topLeft: [30, 58, 138],     // Sügav sinine
+            topRight: [88, 28, 135],    // Lilla
+            bottomLeft: [6, 78, 59],    // Smaragdroheline
+            bottomRight: [124, 45, 18]  // Tumeoranž
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            // Arvutame protsendi ekraani laiusest ja kõrgusest
+            const xPercent = e.clientX / window.innerWidth;
+            const yPercent = e.clientY / window.innerHeight;
+
+            // 1. Uuendame valguslaigu (radial-gradient) asukohta
+            glow.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, rgba(255,255,255,0.1) 0%, transparent 50%)`;
+
+            // 2. Arvutame uue taustavärvi kasutades bilineaarset interpoleerimist
+            // See meetod segab sujuvalt kokku 4 nurga värvi vastavalt X ja Y koordinaatidele
+            const r = Math.round(
+                corners.topLeft[0] * (1 - xPercent) * (1 - yPercent) +
+                corners.topRight[0] * xPercent * (1 - yPercent) +
+                corners.bottomLeft[0] * (1 - xPercent) * yPercent +
+                corners.bottomRight[0] * xPercent * yPercent
+            );
+
+            const g = Math.round(
+                corners.topLeft[1] * (1 - xPercent) * (1 - yPercent) +
+                corners.topRight[1] * xPercent * (1 - yPercent) +
+                corners.bottomLeft[1] * (1 - xPercent) * yPercent +
+                corners.bottomRight[1] * xPercent * yPercent
+            );
+
+            const b = Math.round(
+                corners.topLeft[2] * (1 - xPercent) * (1 - yPercent) +
+                corners.topRight[2] * xPercent * (1 - yPercent) +
+                corners.bottomLeft[2] * (1 - xPercent) * yPercent +
+                corners.bottomRight[2] * xPercent * yPercent
+            );
+
+            // Rakendame arvutatud värvi body taustaks
+            body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            
+            // Näitame koordinaate ekraanil
+            coordsText.innerText = `X: ${Math.round(xPercent * 100)}%, Y: ${Math.round(yPercent * 100)}%`;
+        });
+
+        // Lisame ka puuteekraani toe
+        window.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            window.dispatchEvent(mouseEvent);
+        });
+    </script>
+</body>
+</html>

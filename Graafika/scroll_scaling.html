@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Scaling - Kerimisega Suurenevad Elemendid</title>
+    <style>
+        :root {
+            --bg-color: #000;
+            --text-color: #fff;
+            --accent-color: #f43f5e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Kerimise progressi riba ülal */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            z-index: 100;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .section {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        /* Hero tekst, mis kahaneb ja hääbub kerides */
+        .hero-content {
+            text-align: center;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+            will-change: transform, opacity;
+        }
+
+        h1 {
+            font-size: 8vw;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: 900;
+            line-height: 0.9;
+        }
+
+        /* Kaardid, mis suurenevad ekraani keskele jõudes */
+        .card-container {
+            display: flex;
+            gap: 2.5rem;
+            padding: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            width: 280px;
+            height: 380px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.1s ease-out, border-color 0.2s ease;
+            will-change: transform;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .card span {
+            font-size: 5rem;
+            opacity: 0.2;
+            margin-bottom: 1rem;
+        }
+
+        /* Taustal olev kumaefekt, mis kasvab kerides */
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 100vmax;
+            height: 100vmax;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .footer-text {
+            position: absolute;
+            bottom: 40px;
+            opacity: 0.5;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="bg-glow" id="bgGlow"></div>
+
+    <!-- 1. SEKTSIOON: Algus -->
+    <div class="section">
+        <div class="hero-content" id="hero">
+            <h1>KERI</h1>
+            <h1 style="color: var(--accent-color)">ALLA</h1>
+        </div>
+        <div class="footer-text">Avasta skaleeruv maailm</div>
+    </div>
+
+    <!-- 2. SEKTSIOON: Kaardid -->
+    <div class="section" style="flex-direction: column; height: 120vh;">
+        <h2 style="margin-bottom: 3rem; font-weight: 300; letter-spacing: 2px; opacity: 0.8;">Fookus suurendab elemente</h2>
+        <div class="card-container">
+            <div class="card scale-card"><span>01</span>Interaktiivsus</div>
+            <div class="card scale-card"><span>02</span>Dünaamika</div>
+            <div class="card scale-card"><span>03</span>Elamus</div>
+        </div>
+    </div>
+
+    <!-- 3. SEKTSIOON: Lõpp -->
+    <div class="section">
+        <div class="hero-content" id="final">
+            <h1 style="font-size: 6vw;">LÕPP-PUNKT</h1>
+            <p style="font-size: 1.5rem; opacity: 0.6; margin-top: 1rem;">Kõik elemendid on sünkroonis sinu kerimisega</p>
+        </div>
+    </div>
+
+    <script>
+        const progressBar = document.getElementById('progressBar');
+        const bgGlow = document.getElementById('bgGlow');
+        const hero = document.getElementById('hero');
+        const cards = document.querySelectorAll('.scale-card');
+        const final = document.getElementById('final');
+
+        function updateScrollEffects() {
+            const scrollTop = window.pageYOffset;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / scrollHeight);
+            
+            // 1. Progressi riba ülal
+            progressBar.style.width = (scrollPercent * 100) + '%';
+
+            // 2. Hero teksti kahanemine
+            // Tekst kaob täielikult kui on keritud 600px
+            const heroFadeLimit = 600;
+            const heroFactor = Math.max(0, 1 - (scrollTop / heroFadeLimit));
+            hero.style.transform = `scale(${0.5 + heroFactor * 0.5})`;
+            hero.style.opacity = heroFactor;
+
+            // 3. Tausta kuma kasvamine (väärtus 0 kuni 2.5)
+            bgGlow.style.transform = `translate(-50%, -50%) scale(${scrollPercent * 2.5})`;
+
+            // 4. Kaartide skaleerimine vastavalt sellele, kui lähedal nad on ekraani keskkohale
+            cards.forEach((card) => {
+                const rect = card.getBoundingClientRect();
+                const cardCenter = rect.top + rect.height / 2;
+                const viewportCenter = window.innerHeight / 2;
+                
+                // Arvutame kauguse ekraani keskmest (absoluutväärtus)
+                const distance = Math.abs(viewportCenter - cardCenter);
+                
+                // Mida lähemal keskkohale, seda suurem (max 1.25, min 0.85)
+                let scale = 1.25 - (distance / window.innerHeight);
+                scale = Math.max(0.85, Math.min(1.25, scale));
+                
+                card.style.transform = `scale(${scale})`;
+                
+                // Lisame piirjoonele kuma kui element on fookuses
+                const borderAlpha = Math.max(0.05, (scale - 0.85) * 2);
+                card.style.borderColor = `rgba(244, 63, 94, ${borderAlpha})`;
+            });
+
+            // 5. Viimase teksti ilmumise efekt
+            const finalRect = final.parentElement.getBoundingClientRect();
+            if (finalRect.top < window.innerHeight) {
+                const finalProgress = (window.innerHeight - finalRect.top) / window.innerHeight;
+                const finalScale = 0.7 + (Math.min(1, finalProgress) * 0.3);
+                final.style.transform = `scale(${finalScale})`;
+                final.style.opacity = Math.min(1, finalProgress);
+            }
+        }
+
+        // Käivitame efekti kerimisel ja ka lehe laadimisel
+        window.addEventListener('scroll', updateScrollEffects);
+        window.addEventListener('resize', updateScrollEffects);
+        updateScrollEffects();
+    </script>
+</body>
+</html>

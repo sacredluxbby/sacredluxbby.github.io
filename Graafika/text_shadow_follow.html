@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Shadow Follow - Kus hiir, seal päike</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --text-color: #0f172a;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            user-select: none;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 900;
+            margin: 0;
+            line-height: 0.9;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            color: var(--text-color);
+            will-change: text-shadow;
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            font-weight: 700;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0.8;
+            will-change: text-shadow;
+        }
+
+        p {
+            font-size: 1.1rem;
+            opacity: 0.5;
+            margin-top: 40px;
+            letter-spacing: 1px;
+        }
+
+        /* "Päikese" efekt kursori juures */
+        #sun {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body:hover #sun {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="sun"></div>
+
+    <div class="container">
+        <h1 class="shadow-target">PÄIKE</h1>
+        <h2 class="shadow-target">VARJU MÄNG</h2>
+        <p>Kus on hiir, seal on valgusallikas</p>
+    </div>
+
+    <script>
+        const targets = document.querySelectorAll('.shadow-target');
+        const sun = document.getElementById('sun');
+        
+        // Funktsioon varju arvutamiseks
+        function updateShadows(e) {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Päikese liikumine
+            sun.style.left = `${mouseX}px`;
+            sun.style.top = `${mouseY}px`;
+
+            targets.forEach(target => {
+                // Teksti keskpunkti leidmine
+                const rect = target.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                // Vektor kursorist tekstini (vari langeb hiirest eemale)
+                const dx = centerX - mouseX;
+                const dy = centerY - mouseY;
+                
+                // Kaugus hiirest
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                
+                // Varju nihke arvutamine
+                // Jagame teatud faktoriga, et vari ei läheks liiga pikaks
+                const shadowX = dx / 12;
+                const shadowY = dy / 12;
+                
+                // Varju hajuvus (blur) - mida kaugemal hiir, seda udusem vari
+                const blur = Math.min(distance / 15, 25);
+                
+                // Varju läbipaistvus - lähedal on vari teravam ja tumedam
+                const opacity = Math.max(0.1, 0.4 - (distance / 2000));
+
+                // Rakendame mitmekihilise varju sügavuse saavutamiseks
+                target.style.textShadow = `
+                    ${shadowX}px ${shadowY}px ${blur}px rgba(0,0,0,${opacity}),
+                    ${shadowX * 0.5}px ${shadowY * 0.5}px ${blur * 0.5}px rgba(0,0,0,${opacity * 0.5})
+                `;
+            });
+        }
+
+        // Kuulame hiire liikumist
+        window.addEventListener('mousemove', updateShadows);
+
+        // Mobiili/Touch tugi
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                updateShadows(e.touches[0]);
+            }
+        });
+    </script>
+</body>
+</html>

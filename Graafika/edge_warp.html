@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Edge Warp - Pac-Man Efekt</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --portal-color: #38bdf8;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+
+        /* Tausta ruudustik sügavuse jaoks */
+        .grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 40px;
+            width: 100%;
+            text-align: center;
+            opacity: 0.3;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Lohistatav objekt */
+        .warp-object {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 24px;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            will-change: transform;
+            z-index: 10;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .warp-object:active {
+            cursor: grabbing;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.4);
+            border-color: var(--portal-color);
+        }
+
+        /* Erinevad gradientid */
+        .obj-1 { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .obj-2 { background: linear-gradient(135deg, #d946ef, #9333ea); }
+        .obj-3 { background: linear-gradient(135deg, #10b981, #059669); }
+
+        /* Servade "portaalid" */
+        .edge {
+            position: fixed;
+            background: var(--portal-color);
+            opacity: 0.15;
+            z-index: 1;
+            pointer-events: none;
+            box-shadow: 0 0 15px var(--portal-color);
+        }
+        .edge-v { width: 3px; height: 100%; top: 0; }
+        .edge-h { height: 3px; width: 100%; left: 0; }
+        .left { left: 0; }
+        .right { right: 0; }
+        .top { top: 0; }
+        .bottom { bottom: 0; }
+
+    </style>
+</head>
+<body>
+
+    <div class="grid"></div>
+
+    <div class="edge edge-v left"></div>
+    <div class="edge edge-v right"></div>
+    <div class="edge edge-h top"></div>
+    <div class="edge edge-h bottom"></div>
+
+    <div class="instructions">Lohista objekte üle ekraani servade</div>
+
+    <div class="warp-object obj-1" data-id="1">🚀</div>
+    <div class="warp-object obj-2" data-id="2">🛸</div>
+    <div class="warp-object obj-3" data-id="3">👾</div>
+
+    <script>
+        const objects = document.querySelectorAll('.warp-object');
+        let activeId = null;
+        let startX, startY;
+        const state = {};
+
+        // Initsialiseerime positsioonid
+        objects.forEach((el, i) => {
+            const id = el.dataset.id;
+            state[id] = {
+                x: 100 + i * 150,
+                y: window.innerHeight / 2 - 50,
+                el: el
+            };
+            render(id);
+        });
+
+        function render(id) {
+            const item = state[id];
+            const w = 100; 
+            const h = 100;
+            const sw = window.innerWidth;
+            const sh = window.innerHeight;
+
+            // --- WARP LOGIC (Pac-Man) ---
+            // Kui kese läheb üle serva, teleportimine
+            if (item.x > sw) item.x = -w;
+            if (item.x < -w) item.x = sw;
+            if (item.y > sh) item.y = -h;
+            if (item.y < -h) item.y = sh;
+
+            item.el.style.transform = `translate(${item.x}px, ${item.y}px)`;
+        }
+
+        function handleStart(e) {
+            const el = e.target.closest('.warp-object');
+            if (el) {
+                activeId = el.dataset.id;
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX - state[activeId].x;
+                startY = touch.clientY - state[activeId].y;
+                el.style.zIndex = 1000;
+            }
+        }
+
+        function handleMove(e) {
+            if (!activeId) return;
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            state[activeId].x = touch.clientX - startX;
+            state[activeId].y = touch.clientY - startY;
+            render(activeId);
+        }
+
+        function handleEnd() {
+            if (activeId) {
+                state[activeId].el.style.zIndex = 10;
+                activeId = null;
+            }
+        }
+
+        window.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        window.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        window.addEventListener('resize', () => {
+            Object.keys(state).forEach(id => render(id));
+        });
+    </script>
+</body>
+</html>

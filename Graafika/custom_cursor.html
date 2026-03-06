@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Cursor - Kohandatud Kursor</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --text-color: #ffffff;
+            --cursor-color: #38bdf8;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            /* Peidame tavalise kursori süsteemi tasandil */
+            cursor: none;
+        }
+
+        /* Kohandatud kursorikonteiner */
+        #customCursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            pointer-events: none; /* Oluline: kursor ei tohi klikke blokeerida */
+            z-index: 9999;
+            will-change: transform;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Kursori graafiline kuju (nooljas kolmnurk) */
+        .cursor-shape {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-bottom: 28px solid var(--cursor-color);
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.6));
+        }
+
+        /* Kumaefekt kursori taga */
+        .cursor-glow {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .content {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            user-select: none;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            font-weight: 200;
+            letter-spacing: -2px;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff, #64748b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            opacity: 0.5;
+            font-size: 1.2rem;
+            margin-top: 10px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .interactive-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .box {
+            width: 160px;
+            height: 110px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            background: rgba(255,255,255,0.02);
+            font-weight: 500;
+            color: rgba(255,255,255,0.6);
+            /* Ka siin peab kursor peidus olema */
+            cursor: none;
+        }
+
+        .box:hover {
+            background: rgba(56, 189, 248, 0.08);
+            border-color: var(--cursor-color);
+            transform: translateY(-8px);
+            color: white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="customCursor">
+        <div class="cursor-glow"></div>
+        <div class="cursor-shape" id="shape"></div>
+    </div>
+
+    <div class="content">
+        <h1>Custom Cursor</h1>
+        <p>Sinu kursor on asendatud dünaamilise objektiga, mis pöörab end alati liikumise suunda.</p>
+
+        <div class="interactive-grid">
+            <div class="box">Navigeeri</div>
+            <div class="box">Avasta</div>
+            <div class="box">Koge</div>
+        </div>
+    </div>
+
+    <script>
+        const cursor = document.getElementById('customCursor');
+        const shape = document.getElementById('shape');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let cursorX = 0;
+        let cursorY = 0;
+        let lastX = 0;
+        let lastY = 0;
+        let currentAngle = 0;
+
+        // Salvestame hiire positsiooni
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            // Näitame kursorit kohe kui hiir liigub
+            cursor.style.opacity = 1;
+        });
+
+        function animate() {
+            // "Lerp" (Linear Interpolation) sujuvaks liikumiseks
+            // Kursor ei liigu kohe hiire punkti, vaid "ujub" sinna
+            const dx = mouseX - cursorX;
+            const dy = mouseY - cursorY;
+            
+            cursorX += dx * 0.15;
+            cursorY += dy * 0.15;
+
+            // Arvutame liikumise suuna (vektori)
+            const moveX = cursorX - lastX;
+            const moveY = cursorY - lastY;
+
+            // Kontrollime, kas liikumine on piisavalt märgatav, et nurka muuta
+            const velocity = Math.sqrt(moveX * moveX + moveY * moveY);
+            
+            if (velocity > 0.5) {
+                // atan2 arvutab nurga radiaanides liikumise suuna põhjal
+                // Teisendame kraadideks ja lisame 90, kuna algne kuju vaatab üles
+                const targetAngle = Math.atan2(moveY, moveX) * (180 / Math.PI) + 90;
+                
+                // Sujuv nurga muutus (lerp ka nurga jaoks)
+                // See väldib "hüppeid" nurga väärtuses
+                let angleDiff = targetAngle - currentAngle;
+                
+                // Korrigeerime üle 180-kraadised hüpped (lühim tee ringis)
+                if (angleDiff > 180) angleDiff -= 360;
+                if (angleDiff < -180) angleDiff += 360;
+                
+                currentAngle += angleDiff * 0.2;
+            }
+
+            // Rakendame transformatsioonid
+            // translate positsioneerib ja rotate keerab
+            cursor.style.transform = `translate(${cursorX - 20}px, ${cursorY - 20}px)`;
+            shape.style.transform = `rotate(${currentAngle}deg)`;
+
+            // Salvestame positsiooni järgmise kaadri jaoks
+            lastX = cursorX;
+            lastY = cursorY;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Käivitame animatsiooni tsükli
+        animate();
+
+        // Peidame kursori, kui hiir aknast lahkub
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = 0;
+        });
+        
+        document.addEventListener('mouseenter', () => {
+            cursor.style.opacity = 1;
+        });
+    </script>
+</body>
+</html>

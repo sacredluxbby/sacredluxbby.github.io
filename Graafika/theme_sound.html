@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle with Sound - Teema vahetus heliga</title>
+    <style>
+        :root {
+            /* Hele teema (vaikimisi) */
+            --bg-color: #f8fafc;
+            --text-color: #0f172a;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --toggle-bg: #e2e8f0;
+            --description: "Valgus";
+        }
+
+        [data-theme="dark"] {
+            /* Tume teema */
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --accent-color: #60a5fa;
+            --card-bg: #1e293b;
+            --toggle-bg: #334155;
+            --description: "Pimedus";
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s ease;
+        }
+
+        .container {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 4rem 3rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.6s ease, transform 0.3s ease;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        p {
+            opacity: 0.7;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        /* Teema lüliti disain */
+        .toggle-wrapper {
+            position: relative;
+            width: 90px;
+            height: 46px;
+            background-color: var(--toggle-bg);
+            border-radius: 100px;
+            cursor: pointer;
+            margin: 0 auto;
+            transition: background-color 0.4s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            border: 2px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-circle {
+            width: 34px;
+            height: 34px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] .toggle-circle {
+            transform: translateX(44px);
+            background-color: #fbbf24; /* Päikese kollane tumedal taustal */
+        }
+
+        .icon {
+            position: absolute;
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+        }
+
+        .sun-icon { left: 6px; z-index: 1; }
+        .moon-icon { right: 6px; z-index: 1; }
+
+        .status-text {
+            margin-top: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Heliga Teema</h1>
+        <p>Klõpsa lülitit, et kogeda visuaalset ja auditiivset teemavahetust.</p>
+        
+        <div class="toggle-wrapper" id="themeToggle" title="Vaheta teemat">
+            <span class="icon sun-icon">☀️</span>
+            <span class="icon moon-icon">🌙</span>
+            <div class="toggle-circle"></div>
+        </div>
+
+        <div class="status-text" id="statusText">VALGUS</div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const toggle = document.getElementById('themeToggle');
+        const statusText = document.getElementById('statusText');
+        let isDark = false;
+
+        // Web Audio API heliefektide loomiseks
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playThemeSound(type) {
+            initAudio();
+            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'toDark') {
+                // "Langev" heli pimeduse jaoks (siinuslaine)
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            } else {
+                // "Tõusev" heli valguse jaoks (kolmnurklaine on veidi "teravam")
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+                
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.15);
+            }
+        }
+
+        toggle.addEventListener('click', () => {
+            isDark = !isDark;
+            
+            if (isDark) {
+                body.setAttribute('data-theme', 'dark');
+                statusText.innerText = 'PIMEDUS';
+                playThemeSound('toDark');
+            } else {
+                body.removeAttribute('data-theme');
+                statusText.innerText = 'VALGUS';
+                playThemeSound('toLight');
+            }
+        });
+    </script>
+</body>
+</html>

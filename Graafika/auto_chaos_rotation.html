@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Chaos Rotation - Ujuv Liides</title>
+    <style>
+        :root {
+            --bg-color: #030712;
+            --accent-1: #3b82f6;
+            --accent-2: #8b5cf6;
+            --accent-3: #ec4899;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+        }
+
+        /* Tausta sügavuse efekt */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            width: 90vw;
+            height: 90vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            transform-style: preserve-3d;
+        }
+
+        /* Ujuv element */
+        .float-item {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            /* Kaootiline pöörlemine */
+            animation: rotate-chaos var(--duration) linear infinite;
+            will-change: transform;
+            user-select: none;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+
+        .float-item:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        /* Animatsiooni definitsioon kolmemõõtmelises ruumis */
+        @keyframes rotate-chaos {
+            0% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(0);
+            }
+            25% {
+                transform: rotateX(90deg) rotateY(45deg) rotateZ(20deg) translateZ(50px);
+            }
+            50% {
+                transform: rotateX(180deg) rotateY(180deg) rotateZ(0deg) translateZ(0);
+            }
+            75% {
+                transform: rotateX(270deg) rotateY(45deg) rotateZ(-20deg) translateZ(-50px);
+            }
+            100% {
+                transform: rotateX(360deg) rotateY(360deg) rotateZ(0deg) translateZ(0);
+            }
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .float-item:hover .icon {
+            transform: scale(1.1) translateZ(20px);
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.5;
+            font-weight: 600;
+        }
+
+        /* Kumavad taustapilved */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--color);
+            filter: blur(100px);
+            border-radius: 50%;
+            opacity: 0.12;
+            z-index: -1;
+            animation: drift 25s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            from { transform: translate(-30%, -30%) scale(1); }
+            to { transform: translate(30%, 30%) scale(1.2); }
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 40px;
+            opacity: 0.3;
+            font-size: 0.85rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+    
+    <div class="blob" style="--color: var(--accent-1); top: 5%; left: 5%;"></div>
+    <div class="blob" style="--color: var(--accent-2); bottom: 5%; right: 5%;"></div>
+    <div class="blob" style="--color: var(--accent-3); top: 40%; left: 45%;"></div>
+
+    <div class="container" id="container">
+        <!-- Elemendid genereeritakse JavaScriptiga -->
+    </div>
+
+    <div class="instructions">Automaatne kaootiline pöörlemine</div>
+
+    <script>
+        const container = document.getElementById('container');
+        const items = [
+            { icon: '💎', label: 'Väärtus' },
+            { icon: '🌀', label: 'Vool' },
+            { icon: '⚛️', label: 'Tuum' },
+            { icon: '✨', label: 'Sära' },
+            { icon: '🌕', label: 'Rahu' },
+            { icon: '🪐', label: 'Kord' },
+            { icon: '🌈', label: 'Spekter' },
+            { icon: '🔥', label: 'Leek' },
+            { icon: '🛸', label: 'Tundmatu' },
+            { icon: '🧬', label: 'Kood' }
+        ];
+
+        items.forEach(data => {
+            const div = document.createElement('div');
+            div.className = 'float-item';
+            
+            // Määrame igale elemendile erineva pöörlemiskiiruse (kaos)
+            // Kestus vahemikus 20s kuni 50s
+            const duration = (Math.random() * 30 + 20).toFixed(2);
+            div.style.setProperty('--duration', `${duration}s`);
+            
+            // Alustame animatsiooni juhuslikust kohast, et nad ei liiguks sünkroonis
+            div.style.animationDelay = `-${Math.random() * 50}s`;
+
+            div.innerHTML = `
+                <div class="icon">${data.icon}</div>
+                <div class="label">${data.label}</div>
+            `;
+            
+            container.appendChild(div);
+        });
+    </script>
+</body>
+</html>

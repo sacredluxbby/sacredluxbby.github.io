@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Buttons - Magnetilised Nupud</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+            --button-bg: #1e293b;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .magnetic-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px; /* Ala, kus magnetiline tõmme rakendub */
+        }
+
+        .btn {
+            position: relative;
+            padding: 1.2rem 2.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            color: white;
+            background: var(--button-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            cursor: pointer;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: #2d3748;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn span {
+            pointer-events: none; /* Tekst ei sega hiire tuvastamist */
+            display: inline-block;
+        }
+
+        .btn-blue { border-color: #3b82f6; }
+        .btn-purple { border-color: #a855f7; }
+        .btn-emerald { border-color: #10b981; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Magnetic Buttons</h1>
+        <p>Liiguta hiir nuppude lähedale, et näha magnet-efekti</p>
+    </div>
+
+    <div class="button-container">
+        <div class="magnetic-wrap">
+            <button class="btn btn-blue">
+                <span>Alusta siit</span>
+            </button>
+        </div>
+        
+        <div class="magnetic-wrap">
+            <button class="btn btn-purple">
+                <span>Uuri lähemalt</span>
+            </button>
+        </div>
+
+        <div class="magnetic-wrap">
+            <button class="btn btn-emerald">
+                <span>Võta ühendust</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const wraps = document.querySelectorAll('.magnetic-wrap');
+
+        wraps.forEach(wrap => {
+            const btn = wrap.querySelector('.btn');
+            const text = btn.querySelector('span');
+
+            wrap.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                
+                // Arvutame hiire positsiooni wrap-ala keskkohast
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                // Nupu liikumine hiire poole (40% nihkest)
+                btn.style.transform = `translate(${x * 0.4}px, ${y * 0.4}px)`;
+                
+                // Teksti liikumine (15% nihkest), tekitab "parallaks" efekti
+                text.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+            });
+
+            wrap.addEventListener('mouseleave', () => {
+                // Sujuv naasmine algasendisse
+                btn.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+                text.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+                
+                btn.style.transform = 'translate(0px, 0px)';
+                text.style.transform = 'translate(0px, 0px)';
+
+                // Eemaldame transitioni pärast animatsiooni lõppu
+                setTimeout(() => {
+                    btn.style.transition = '';
+                    text.style.transition = '';
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

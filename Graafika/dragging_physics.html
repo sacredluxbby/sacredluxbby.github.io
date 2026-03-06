@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragging Physics - Laisk Lohistamine</title>
+    <style>
+        :root {
+            --bg-color: #08080a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --accent-color: #6366f1;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Tausta dekoratiivsed elemendid */
+        .bg-glow {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, transparent 70%);
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 50px;
+            width: 100%;
+            text-align: center;
+            opacity: 0.4;
+            pointer-events: none;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            z-index: 100;
+        }
+
+        /* Füüsikaline objekt */
+        .draggable {
+            position: absolute;
+            width: 220px;
+            height: 300px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            will-change: transform;
+            z-index: 10;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        .draggable .icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .draggable h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .draggable p {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            opacity: 0.4;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Lõuend ühendusjoonte jaoks */
+        #physics-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+    <canvas id="physics-canvas"></canvas>
+
+    <div class="instructions">Haara objektidest ja tunne nende massi</div>
+
+    <!-- Objektid erinevate massidega (data-mass määrab reageerimiskiiruse) -->
+    <div class="draggable" data-mass="0.04">
+        <div class="icon">📦</div>
+        <h2>15 kg</h2>
+        <p>Eriti raske</p>
+    </div>
+
+    <div class="draggable" data-mass="0.07">
+        <div class="icon">🧱</div>
+        <h2>8 kg</h2>
+        <p>Tavaline mass</p>
+    </div>
+
+    <div class="draggable" data-mass="0.14">
+        <div class="icon">☁️</div>
+        <h2>2 kg</h2>
+        <p>Kerge kaal</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('physics-canvas');
+        const ctx = canvas.getContext('2d');
+        const draggables = document.querySelectorAll('.draggable');
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let activeObject = null;
+
+        // Initsialiseerime objektid ekraanil hajutatult
+        const objects = Array.from(draggables).map((el, i) => {
+            const startX = (window.innerWidth / 4) * (i + 1) - 110;
+            const startY = window.innerHeight / 2 - 150;
+            
+            return {
+                el: el,
+                x: startX,
+                y: startY,
+                targetX: startX,
+                targetY: startY,
+                offsetX: 0,
+                offsetY: 0,
+                mass: parseFloat(el.dataset.mass), // LERP faktor: väiksem = raskem taju
+                isDragging: false
+            };
+        });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Hiire positsiooni jälgimine
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (activeObject) {
+                activeObject.targetX = mouseX - activeObject.offsetX;
+                activeObject.targetY = mouseY - activeObject.offsetY;
+            }
+        });
+
+        // Puuteekraani tugi
+        window.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+            if (activeObject) {
+                activeObject.targetX = mouseX - activeObject.offsetX;
+                activeObject.targetY = mouseY - activeObject.offsetY;
+            }
+        }, { passive: false });
+
+        objects.forEach(obj => {
+            const startHandler = (clientX, clientY) => {
+                activeObject = obj;
+                obj.isDragging = true;
+                
+                const rect = obj.el.getBoundingClientRect();
+                obj.offsetX = clientX - rect.left;
+                obj.offsetY = clientY - rect.top;
+
+                // Tõstame aktiivse objekti teiste peale
+                objects.forEach(o => o.el.style.zIndex = 10);
+                obj.el.style.zIndex = 100;
+                obj.el.style.borderColor = "var(--accent-color)";
+            };
+
+            obj.el.addEventListener('mousedown', (e) => startHandler(e.clientX, e.clientY));
+            obj.el.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                startHandler(touch.clientX, touch.clientY);
+            });
+        });
+
+        const stopHandler = () => {
+            if (activeObject) {
+                activeObject.isDragging = false;
+                activeObject.el.style.borderColor = "rgba(255, 255, 255, 0.1)";
+            }
+            activeObject = null;
+        };
+
+        window.addEventListener('mouseup', stopHandler);
+        window.addEventListener('touchend', stopHandler);
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            objects.forEach(obj => {
+                // Inertsiefekt: Liigume sihtpunkti poole ainult osa teekonnast igas kaadris
+                // See tekitab sujuva ja "laisa" kiirenduse/aeglustuse
+                const dx = obj.targetX - obj.x;
+                const dy = obj.targetY - obj.y;
+
+                obj.x += dx * obj.mass;
+                obj.y += dy * obj.mass;
+
+                // Rakendame positsiooni ja kerge pöörde liikumise ajal
+                const rotation = dx * 0.05; // Pöörame kergelt liikumise suunas
+                obj.el.style.transform = `translate(${obj.x}px, ${obj.y}px) rotate(${rotation}deg) scale(${obj.isDragging ? 1.05 : 1})`;
+
+                // Joonistame visuaalse ühenduse (pingul nöör)
+                if (obj.isDragging) {
+                    ctx.beginPath();
+                    ctx.moveTo(mouseX, mouseY);
+                    ctx.lineTo(obj.x + obj.offsetX, obj.y + obj.offsetY);
+                    ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]); // Katkendjoon
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

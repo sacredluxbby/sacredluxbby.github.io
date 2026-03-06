@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Ghost - Kummituslik Trükkimine</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #e2e8f0;
+            --accent-color: #38bdf8;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 85%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        /* Varjatud sisendväli, mis püüab klahvivajutused */
+        #hiddenInput {
+            position: absolute;
+            top: -100px;
+            opacity: 0;
+        }
+
+        /* Ala, kus tekst ilmub */
+        #displayArea {
+            font-size: 3rem;
+            min-height: 1.2em;
+            line-height: 1.4;
+            letter-spacing: 1px;
+            word-wrap: break-word;
+            display: inline-block;
+            text-align: left;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Üksiku sümboli stiil ja "kummituslik" ilmumine */
+        .char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px) scale(0.8);
+            filter: blur(10px);
+            animation: ghostReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            white-space: pre;
+            color: var(--text-color);
+        }
+
+        @keyframes ghostReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.8);
+                filter: blur(10px);
+            }
+            50% {
+                opacity: 0.5;
+                filter: blur(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Vilkuv kursor */
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            height: 0.8em;
+            background-color: var(--accent-color);
+            margin-left: 8px;
+            vertical-align: middle;
+            animation: blink 1.2s infinite;
+            box-shadow: 0 0 15px var(--accent-color);
+            border-radius: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 50px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            opacity: 0.2;
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            user-select: none;
+        }
+
+        /* Eriefekt täishäälikutele või juhuslikele tähtedele (valikuline) */
+        .char:nth-child(odd) {
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sisendväli fookuse hoidmiseks -->
+    <input type="text" id="hiddenInput" autocomplete="off" spellcheck="false">
+
+    <div class="container">
+        <div id="displayArea"><span class="cursor"></span></div>
+    </div>
+
+    <div class="instructions">Klõpsa ja hakka trükkima...</div>
+
+    <script>
+        const hiddenInput = document.getElementById('hiddenInput');
+        const displayArea = document.getElementById('displayArea');
+        const cursor = displayArea.querySelector('.cursor');
+
+        // Suuname klõpsud varjatud sisendväljale
+        document.addEventListener('click', () => hiddenInput.focus());
+
+        hiddenInput.addEventListener('input', (e) => {
+            const currentText = e.target.value;
+            const charCount = displayArea.querySelectorAll('.char').length;
+
+            if (currentText.length > charCount) {
+                // Kasutaja trükkis uue sümboli
+                const newChar = currentText.charAt(currentText.length - 1);
+                addGhostChar(newChar);
+            } else if (currentText.length < charCount) {
+                // Kasutaja kustutas sümboli
+                removeLastChar();
+            }
+        });
+
+        function addGhostChar(char) {
+            const span = document.createElement('span');
+            span.classList.add('char');
+            
+            // Tühiku haldamine
+            if (char === ' ') {
+                span.innerHTML = '&nbsp;';
+            } else {
+                span.textContent = char;
+            }
+
+            // Lisame sümboli ekraanile kursorist vasakule
+            displayArea.insertBefore(span, cursor);
+            
+            // Lisame pisikese juhusliku viivituse animatsioonile loomulikkuse huvides
+            const jitter = Math.random() * 150;
+            span.style.animationDelay = `${jitter}ms`;
+        }
+
+        function removeLastChar() {
+            const chars = displayArea.querySelectorAll('.char');
+            if (chars.length > 0) {
+                const last = chars[chars.length - 1];
+                // Kustutamisel teeme kiire "haihtumise"
+                last.style.animation = 'ghostFadeOut 0.3s forwards';
+                setTimeout(() => last.remove(), 300);
+            }
+        }
+
+        // Haihtumise animatsioon kustutamiseks
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes ghostFadeOut {
+                to { opacity: 0; transform: scale(1.2); filter: blur(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Algne fookus
+        window.onload = () => hiddenInput.focus();
+    </script>
+</body>
+</html>

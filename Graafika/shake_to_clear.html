@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shake to Clear - Raputa ja Puhasta</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-1: #3b82f6;
+            --card-2: #ef4444;
+            --card-3: #10b981;
+            --card-4: #f59e0b;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            position: relative;
+            width: 80%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+
+        .header-box {
+            grid-column: 1 / -1;
+            margin-bottom: 2rem;
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #1e293b;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        p {
+            color: #64748b;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .element {
+            height: 160px;
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 800;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        .e1 { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+        .e2 { background: linear-gradient(135deg, #f87171, #ef4444); }
+        .e3 { background: linear-gradient(135deg, #34d399, #10b981); }
+        .e4 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+
+        /* Kukumise animatsioon */
+        .falling {
+            pointer-events: none;
+            transform: translateY(120vh) rotate(var(--rotation)) !important;
+            opacity: 0;
+        }
+
+        #resetBtn {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150px);
+            padding: 16px 32px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        #resetBtn:hover {
+            background: #334155;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        #resetBtn.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Energia indikaator ülal */
+        .shake-meter {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .shake-bar {
+            height: 100%;
+            width: 0%;
+            background: #ef4444;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="shake-meter">
+        <div class="shake-bar" id="shakeBar"></div>
+    </div>
+
+    <button id="resetBtn">Taasta elemendid</button>
+
+    <div class="container" id="mainContainer">
+        <div class="header-box" id="header">
+            <h1>Shake to Clear</h1>
+            <p>Raputa hiirt kiiresti küljelt küljele, et leht tühjendada!</p>
+        </div>
+        
+        <div class="element e1">01</div>
+        <div class="element e2">02</div>
+        <div class="element e3">03</div>
+        <div class="element e4">04</div>
+        <div class="element e1">05</div>
+        <div class="element e2">06</div>
+        <div class="element e3">07</div>
+        <div class="element e4">08</div>
+    </div>
+
+    <script>
+        const elements = document.querySelectorAll('.element, .header-box');
+        const resetBtn = document.getElementById('resetBtn');
+        const shakeBar = document.getElementById('shakeBar');
+
+        let lastX = 0;
+        let lastDir = 0;
+        let shakeEnergy = 0;
+        let isCleared = false;
+
+        // Jälgime hiire liikumist
+        window.addEventListener('mousemove', (e) => {
+            if (isCleared) return;
+
+            const currentX = e.clientX;
+            const deltaX = currentX - lastX;
+            const currentDir = deltaX > 0 ? 1 : -1;
+
+            // Kui hiir vahetas suunda ja liikumine oli piisavalt pikk (kiire raputus)
+            if (currentDir !== lastDir && Math.abs(deltaX) > 20) {
+                shakeEnergy += 15; // Lisame "energiat"
+                lastDir = currentDir;
+            }
+
+            lastX = currentX;
+        });
+
+        // Animatsiooni tsükkel energia haldamiseks
+        function update() {
+            if (!isCleared) {
+                // Energia väheneb ajas (hääbumine)
+                shakeEnergy *= 0.96;
+                if (shakeEnergy < 0.2) shakeEnergy = 0;
+                
+                shakeBar.style.width = Math.min(shakeEnergy, 100) + '%';
+
+                // Kui energia läheb üle 100, toimub elementide "kukkumine"
+                if (shakeEnergy > 100) {
+                    triggerClear();
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        function triggerClear() {
+            isCleared = true;
+            shakeBar.style.width = '0%';
+            
+            elements.forEach((el, index) => {
+                // Juhuslikud väärtused loomulikumaks kukkumiseks
+                const randomRot = (Math.random() - 0.5) * 80; // Suvaline pööre
+                const randomDelay = Math.random() * 0.4;     // Suvaline viivitus
+                
+                el.style.setProperty('--rotation', `${randomRot}deg`);
+                el.style.transitionDelay = `${randomDelay}s`;
+                el.classList.add('falling');
+            });
+
+            // Näitame taastamise nuppu pärast kukkumist
+            setTimeout(() => {
+                resetBtn.classList.add('show');
+            }, 1000);
+        }
+
+        // Taastamine
+        resetBtn.addEventListener('click', () => {
+            isCleared = false;
+            shakeEnergy = 0;
+            resetBtn.classList.remove('show');
+            
+            elements.forEach(el => {
+                el.style.transitionDelay = '0s';
+                el.classList.remove('falling');
+            });
+        });
+
+        update();
+    </script>
+</body>
+</html>
