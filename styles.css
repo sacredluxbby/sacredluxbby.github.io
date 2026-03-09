@@ -72,6 +72,19 @@ background: linear-gradient(135deg, #3a1a5a, #20053a); border: 1px solid #ffffff
 
 footer {border-top: 1px solid #ffffff10; color: #b3a1cc; text-align: center; padding: 40px 20px; }
 
+.trail {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 15px var(--accent);
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    transform: scale(0);
+}
+
 @media (max-width: 900px) { 
     .hero { grid-template-columns: 1fr; }
     .cards { grid-template-columns: 1fr; }

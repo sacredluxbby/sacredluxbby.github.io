@@ -93,6 +93,10 @@
             <a href="Brauseri Mäng/index.html" class="mini">
                 <h3>Brauseri Mäng</h3>
                 <p>Lõbus ajaviide</p>
+
+
+
+                
             </a>
         </section>
     </main>
@@ -100,5 +104,32 @@
     <footer id="start">
         © 2026 Digikangelane - tehtud armastusega CSS-i vastu
     </footer>
+
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = e.clientX + 'px';
+            trail.style.top = e.clientY + 'px';
+            
+            // Randomize color slightly between the two accent colors
+            const colors = ['#9d50ff', '#ff50e0'];
+            trail.style.background = colors[Math.floor(Math.random() * colors.length)];
+            trail.style.boxShadow = `0 0 15px ${trail.style.background}`;
+
+            document.body.appendChild(trail);
+
+            // Animate
+            requestAnimationFrame(() => {
+                trail.style.transform = `scale(${Math.random() * 2 + 1}) translate(${(Math.random() - 0.5) * 40}px, ${(Math.random() - 0.5) * 40}px)`;
+                trail.style.opacity = '0';
+            });
+
+            // Remove after animation
+            setTimeout(() => {
+                trail.remove();
+            }, 500);
+        });
+    </script>
 </body>
 </html>

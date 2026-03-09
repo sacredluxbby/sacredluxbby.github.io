@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-top">
+            <div class="score-container">
+                <div>1UP</div>
+                <div id="score">00</div>
+            </div>
+            <div class="score-container">
+                <div>HIGH SCORE</div>
+                <div id="high-score">00</div>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-bottom">
+            <div id="lives"></div>
+            <div id="fruit"></div>
+        </div>
+        <div id="start-screen">
+            <div class="logo">PAC-MAN</div>
+            <button id="start-button">START</button>
+        </div>
+        <div id="overlay">
+            <div id="message">READY!</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
