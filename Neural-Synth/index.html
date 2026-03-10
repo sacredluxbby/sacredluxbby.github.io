@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural-Synth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-noise" aria-hidden="true"></div>
+    <div class="page-glow page-glow-left" aria-hidden="true"></div>
+    <div class="page-glow page-glow-right" aria-hidden="true"></div>
+
+    <main class="app-shell">
+        <section class="panel intro-panel">
+            <div>
+                <p class="eyebrow">Heli + kood</p>
+                <h1>Neural-Synth</h1>
+                <p class="description">
+                    See on projekt, kus programmeerimine kohtub helidisainiga. Iga pintslitõmme jätab lõuendile jälje ja sünnitab samal ajal heli. Sa ei joonista ainult kujundeid, vaid mängid ruumi nagu instrumenti.
+                </p>
+            </div>
+
+            <div class="control-list">
+                <div class="control-row"><span>Joonista</span><strong>Hoia hiirt või puudutust</strong></div>
+                <div class="control-row"><span>Pitch-on-Y</span><strong>Kõrgemal = kõrgem heli</strong></div>
+                <div class="control-row"><span>Värv = pill</span><strong>Punane, sinine, kollane</strong></div>
+                <div class="control-row"><span>Speed-Volume</span><strong>Kiirus teeb heli valjemaks ja teravamaks</strong></div>
+                <div class="control-row"><span>Gravity Loops</span><strong>Aseta magnetpunktid lõuendile</strong></div>
+                <div class="control-row"><span>Symmetry Mode</span><strong>Üks joon peegeldub neljaks</strong></div>
+                <div class="control-row"><span>Waveform Brush</span><strong>Pintsel joonistab ostsillogrammi</strong></div>
+                <div class="control-row"><span>Puhasta</span><strong>C või nupp all</strong></div>
+                <div class="control-row"><span>Shake to Clear</span><strong>Raputa telefoni või vajuta nuppu</strong></div>
+                <div class="control-row"><span>Background Vibe</span><strong>Atmosfääriheli ekraani tiheduse järgi</strong></div>
+            </div>
+
+            <div class="stat-grid">
+                <article class="stat-card">
+                    <span>Pintslitõmbed</span>
+                    <strong id="strokeCountValue">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Noodid</span>
+                    <strong id="noteCountValue">0</strong>
+                </article>
+            </div>
+
+            <div class="button-row">
+                <button id="startButton" class="primary-btn">Ärata heli</button>
+                <button id="clearButton" class="ghost-btn">Puhasta lõuend</button>
+                <button id="recordButton" class="ghost-btn">Salvesta 5s loop</button>
+                <button id="shakeButton" class="ghost-btn">Raputa!</button>
+            </div>
+
+            <p class="footnote">Iga trajektoor kontrollib korraga värvi, kõla, kaja ja energia hulka.</p>
+        </section>
+
+        <section class="arena-panel">
+            <div class="hud-top">
+                <div class="hud-pill">
+                    <span>Režiim</span>
+                    <strong id="modeValue">Sinine klaver</strong>
+                </div>
+                <div class="hud-pill">
+                    <span>Skaala</span>
+                    <strong id="scaleValue">C min pentatoonika</strong>
+                </div>
+                <div class="hud-pill accent-pill">
+                    <span>Viimane noot</span>
+                    <strong id="lastNoteValue">-</strong>
+                </div>
+                <div class="hud-pill hot-pill">
+                    <span>Energia</span>
+                    <strong id="energyValue">0%</strong>
+                </div>
+
+                <div class="hud-pill">
+                    <span>Looper</span>
+                    <strong id="loopValue">Väljas</strong>
+                </div>
+
+                <div class="hud-pill">
+                    <span>Magnetid</span>
+                    <strong id="magnetValue">0</strong>
+                </div>
+            </div>
+
+            <div class="canvas-wrap">
+                <canvas id="synthCanvas" width="1200" height="760" aria-label="Neural-Synthi joonistuslõuend"></canvas>
+
+                <div id="overlay" class="overlay visible">
+                    <div class="overlay-card">
+                        <p class="overlay-eyebrow">Audiovisuaalne lõuend</p>
+                        <h2>Joonista muusikat</h2>
+                        <p>Ärata helimootor ja tõmba lõuendile joon. Iga liigutus genereerib värvi, kõrguse, dünaamika ja kaja.</p>
+                        <div class="overlay-actions">
+                            <button id="overlayButton" class="primary-btn">Alusta</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hud-bottom">
+                <div id="statusText" class="status-chip">Ärata heli ja hakka joonistama.</div>
+                <div class="progress-inline">
+                    <span>Žesti tihedus</span>
+                    <div class="mini-track"><div id="densityFill" class="mini-fill"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="panel telemetry-panel">
+            <div class="telemetry-head">
+                <p class="eyebrow">Reaalajas spekter</p>
+                <h2>Kuulav lõuend</h2>
+            </div>
+
+            <div id="waveBars" class="wave-bars" aria-hidden="true"></div>
+
+            <div class="meter-block">
+                <div class="meter-label-row"><span>Resonants</span><strong id="resonanceLabel">0%</strong></div>
+                <div class="meter-track"><div id="resonanceFill" class="meter-fill cyan-fill"></div></div>
+            </div>
+
+            <div class="meter-block">
+                <div class="meter-label-row"><span>Kaja</span><strong id="echoLabel">28%</strong></div>
+                <div class="meter-track"><div id="echoFill" class="meter-fill orange-fill"></div></div>
+            </div>
+
+            <div class="meter-block">
+                <div class="meter-label-row"><span>Harmooniline laius</span><strong id="spreadLabel">0%</strong></div>
+                <div class="meter-track"><div id="spreadFill" class="meter-fill lime-fill"></div></div>
+            </div>
+
+            <div class="control-stack">
+                <label class="control-block">
+                    <span>Süntesaatori värv</span>
+                    <select id="instrumentSelect">
+                        <option value="red">Roosa - sügav bass</option>
+                        <option value="blue" selected>Violetne - pehme klaver</option>
+                        <option value="yellow">Lavendel - särav sünt</option>
+                        <option value="green">Neoon mint - mahe pad</option>
+                        <option value="cyan">Jääsinine - lühike pluck</option>
+                        <option value="orange">Korall - särav lead</option>
+                    </select>
+                </label>
+
+                <label class="control-block">
+                    <span>Skaala</span>
+                    <select id="scaleSelect">
+                        <option value="cMinorPent">C min pentatoonika</option>
+                        <option value="dDorian">D dooria</option>
+                        <option value="fLydian">F lüüdia</option>
+                        <option value="aHarmonic">A harmooniline moll</option>
+                        <option value="gMajor">G duur</option>
+                        <option value="eNaturalMinor">E naturaalne moll</option>
+                        <option value="bPhrygian">B friigia</option>
+                        <option value="ebBlues">Eb blues</option>
+                        <option value="cWholeTone">C täistoon</option>
+                    </select>
+                </label>
+
+                <label class="control-block">
+                    <span>Pintsli laius</span>
+                    <input id="brushSizeInput" type="range" min="6" max="24" value="12">
+                </label>
+
+                <label class="control-block">
+                    <span>Nooditihedus</span>
+                    <input id="densityInput" type="range" min="20" max="100" value="62">
+                </label>
+
+                <label class="control-block">
+                    <span>Kaja hulk</span>
+                    <input id="echoInput" type="range" min="0" max="85" value="28">
+                </label>
+
+                <label class="control-block toggle-block">
+                    <span>Sümmeetria</span>
+                    <label class="toggle-inline">
+                        <input id="symmetryToggle" type="checkbox">
+                        <span>Peegelda 4 suunda</span>
+                    </label>
+                </label>
+
+                <label class="control-block toggle-block">
+                    <span>Taustavibe</span>
+                    <label class="toggle-inline">
+                        <input id="bgVibeToggle" type="checkbox">
+                        <span>Atmosfääriheli ekraanil</span>
+                    </label>
+                </label>
+
+                <div class="stack-actions">
+                    <button id="addMagnetButton" class="ghost-btn small-btn">Lisa magnet</button>
+                    <button id="clearMagnetsButton" class="ghost-btn small-btn">Eemalda magnetid</button>
+                </div>
+            </div>
+
+            <div class="tips-card">
+                <p class="tips-title">Mängi lõuendit</p>
+                <ul>
+                    <li>Noodikõrgus tuleb ainult Y-asukohast: üleval kõrge, all madal.</li>
+                    <li>Jooned kaovad aeglaselt ja nende kaja vaibub samas tempos.</li>
+                    <li>Kiiremad žestid annavad valjema, heledama ja teravama kõla.</li>
+                </ul>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
