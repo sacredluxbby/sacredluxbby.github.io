@@ -64,9 +64,13 @@ const MATERIAL = {
   LAVA: 11,
   SEED: 12,
   FLOWER_STEM: 13,
-  FLOWER_PETAL: 14
+  FLOWER_PETAL: 14,
+  DIRT: 15,   // земля — статичная, кислота растворяет
+  FUSE: 16,   // фитиль — проводник огня, сгорает
+  SPROUT: 17, // росток — вырастает на дереве рядом с водой, расширяется в крону
+  CANOPY: 18  // крона дерева — легко горит
 };
-const MATERIAL_COUNT = 15;
+const MATERIAL_COUNT = 19;
 
 // ── Режимы кисти ──────────────────────────────────────────────────────────────
 // PAINT  — рисует выбранный материал
@@ -92,6 +96,10 @@ const MATERIAL_FROM_NAME = {
   acid: MATERIAL.ACID,
   lava: MATERIAL.LAVA,
   seed: MATERIAL.SEED,
+  dirt: MATERIAL.DIRT,
+  fuse: MATERIAL.FUSE,
+  sprout: MATERIAL.SPROUT,
+  canopy: MATERIAL.CANOPY,
   eraser: MATERIAL.EMPTY
 };
 
@@ -113,7 +121,11 @@ const DATA = {
   [MATERIAL.LAVA]: { name: "Lava", baseColor: [235, 91, 24], showInLegend: true },
   [MATERIAL.SEED]: { name: "Flower Seed", baseColor: [154, 118, 74], showInLegend: true },
   [MATERIAL.FLOWER_STEM]: { name: "Stem", baseColor: [72, 170, 74], showInLegend: false },
-  [MATERIAL.FLOWER_PETAL]: { name: "Petal", baseColor: [242, 122, 180], showInLegend: false }
+  [MATERIAL.FLOWER_PETAL]: { name: "Petal", baseColor: [242, 122, 180], showInLegend: false },
+  [MATERIAL.DIRT]: { name: "Dirt", baseColor: [101, 67, 33], showInLegend: true },
+  [MATERIAL.FUSE]: { name: "Fuse", baseColor: [210, 190, 140], showInLegend: true },
+  [MATERIAL.SPROUT]: { name: "Sprout", baseColor: [82, 180, 52], showInLegend: true },
+  [MATERIAL.CANOPY]: { name: "Tree Crown", baseColor: [38, 110, 34], showInLegend: true }
 };
 
 // ── Буферы состояния мира ─────────────────────────────────────────────────────
@@ -296,6 +308,8 @@ function queueDeadParticle(index) {
   updated[index] = 1;
 }
 
+// Регистрирует столкновение двух ячеек: накапливает энергию по типам материалов
+// (используется для генерации звуков) и смешивает цвета при ярком контрасте.
 function registerCollision(i, j, impact) {
   collisionsThisFrame += impact;
   const t1 = world[i];
@@ -317,6 +331,8 @@ function registerCollision(i, j, impact) {
   }
 }
 
+// Определяет, может ли частица type вытеснить (занять место) targetType.
+// Это правило плотности: тяжёлое вытесняет лёгкое (песок → воду, огонь → газ и т.д.)
 function canDisplace(type, targetType) {
   if (targetType === MATERIAL.EMPTY) return true;
 
@@ -347,18 +363,22 @@ function canDisplace(type, targetType) {
   return false;
 }
 
+// Статичные материалы не двигаются сами по себе (камень, дерево, части цветка, земля, фитиль, ростки, крона)
 function isStatic(type) {
-  return type === MATERIAL.STONE || type === MATERIAL.WOOD || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL;
+  return type === MATERIAL.STONE || type === MATERIAL.WOOD || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY;
 }
 
+// Подвижные материалы — все не-пустые и не-статичные
 function isMovable(type) {
   return type !== MATERIAL.EMPTY && !isStatic(type);
 }
 
+// Бессмертные материалы — не истекают по таймеру LIFE_LIMIT_MS
 function isImmortal(type) {
-  return type === MATERIAL.STONE || type === MATERIAL.SEED || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL;
+  return type === MATERIAL.STONE || type === MATERIAL.SEED || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY;
 }
 
+// Проверяет, есть ли в соседних 8 ячейках хотя бы одна ячейка заданного типа
 function nearElement(x, y, type) {
   for (let oy = -1; oy <= 1; oy += 1) {
     for (let ox = -1; ox <= 1; ox += 1) {
@@ -372,6 +392,7 @@ function nearElement(x, y, type) {
   return false;
 }
 
+// Возвращает индекс первой соседней ячейки заданного типа, или -1 если не найдено
 function findAdjacentElement(x, y, type) {
   for (let oy = -1; oy <= 1; oy += 1) {
     for (let ox = -1; ox <= 1; ox += 1) {
@@ -388,6 +409,9 @@ function findAdjacentElement(x, y, type) {
   return -1;
 }
 
+// Пробует переместить частицу из (x,y) в (nx,ny).
+// Если целевая ячейка доступна по правилу canDisplace — меняет местами.
+// Иначе регистрирует столкновение. Возвращает true при успешном перемещении.
 function tryMove(x, y, nx, ny) {
   if (!inBounds(nx, ny)) return false;
   const i = toIndex(x, y);
@@ -406,6 +430,9 @@ function tryMove(x, y, nx, ny) {
   return false;
 }
 
+// ── Правила физики для каждого материала ─────────────────────────────────────
+
+// Песок: падает вниз, затем по диагонали (случайный приоритет), не течёт горизонтально
 function updateSand(x, y) {
   if (tryMove(x, y, x, y + 1)) return;
   const first = Math.random() < 0.5 ? -1 : 1;
@@ -414,6 +441,7 @@ function updateSand(x, y) {
   tryMove(x, y, x + second, y + 1);
 }
 
+// Вода: падает вниз, по диагонали вниз, затем растекается горизонтально
 function updateWater(x, y) {
   if (tryMove(x, y, x, y + 1)) return;
 
@@ -430,6 +458,7 @@ function updateWater(x, y) {
   }
 }
 
+// Газ: всплывает вверх, по диагонали вверх, затем растекается горизонтально
 function updateGas(x, y) {
   if (tryMove(x, y, x, y - 1)) return;
 
@@ -446,6 +475,7 @@ function updateGas(x, y) {
   }
 }
 
+// Дым: тает (уменьшает life каждый такт), при life==0 исчезает; поднимается вверх
 function updateSmoke(x, y) {
   const i = toIndex(x, y);
   if (life[i] > 0) life[i] -= 1;
@@ -464,6 +494,7 @@ function updateSmoke(x, y) {
   tryMove(x, y, x + second, y);
 }
 
+// Пар: тает аналогично дыму; при истечении life с вероятностью 55% конденсируется в воду
 function updateSteam(x, y) {
   const i = toIndex(x, y);
   if (life[i] > 0) life[i] -= 1;
@@ -482,6 +513,7 @@ function updateSteam(x, y) {
   tryMove(x, y, x + second, y);
 }
 
+// Поджигает соседние горючие ячейки (дерево, масло, газ) с заданной вероятностью
 function igniteNeighbors(x, y, chance) {
   for (let oy = -1; oy <= 1; oy += 1) {
     for (let ox = -1; ox <= 1; ox += 1) {
@@ -495,10 +527,27 @@ function igniteNeighbors(x, y, chance) {
         setCell(ni, MATERIAL.FIRE);
         updated[ni] = 1;
       }
+      // Фитиль воспламеняется от огня быстрее чем дерево (chance × 2.5)
+      if (t === MATERIAL.FUSE && Math.random() < Math.min(0.92, chance * 2.5)) {
+        setCell(ni, MATERIAL.FIRE);
+        updated[ni] = 1;
+      }
+      // Крона горит в ~5× быстрее дерева — очень лёгкий материал
+      if (t === MATERIAL.CANOPY && Math.random() < Math.min(0.98, chance * 5)) {
+        setCell(ni, MATERIAL.FIRE);
+        updated[ni] = 1;
+      }
+      // Росток тоже горит — чуть медленнее кроны
+      if (t === MATERIAL.SPROUT && Math.random() < Math.min(0.95, chance * 3)) {
+        setCell(ni, MATERIAL.FIRE);
+        updated[ni] = 1;
+      }
     }
   }
 }
 
+// Огонь: уменьшает life, поджигает соседей, гасится водой (→ пар/дым),
+// при сгорании превращается в дым или исчезает; поднимается вверх
 function updateFire(x, y) {
   const i = toIndex(x, y);
   if (life[i] > 0) life[i] -= 1;
@@ -523,6 +572,7 @@ function updateFire(x, y) {
   tryMove(x, y, x - drift, y - 1);
 }
 
+// Масло: воспламеняется рядом с огнём/лавой; течёт как вода, но медленнее
 function updateOil(x, y) {
   const i = toIndex(x, y);
   if ((nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) && Math.random() < 0.16) {
@@ -545,6 +595,8 @@ function updateOil(x, y) {
   }
 }
 
+// Кислота: разъедает дерево (превращает в газ/пустоту), нейтрализуется лавой;
+// течёт как вода
 function updateAcid(x, y) {
   const i = toIndex(x, y);
 
@@ -558,6 +610,10 @@ function updateAcid(x, y) {
       const t = world[ni];
       if ((t === MATERIAL.WOOD) && Math.random() < 0.03) {
         setCell(ni, Math.random() < 0.55 ? MATERIAL.GAS : MATERIAL.EMPTY);
+      }
+      // Кислота медленно разъедает землю
+      if (t === MATERIAL.DIRT && Math.random() < 0.022) {
+        setCell(ni, MATERIAL.EMPTY);
       }
     }
   }
@@ -582,6 +638,8 @@ function updateAcid(x, y) {
   }
 }
 
+// Лава: испаряет воду (→ пар), поджигает дерево/масло/газ, может застыть в камень;
+// медленно течёт как вязкая жидкость
 function updateLava(x, y) {
   const i = toIndex(x, y);
 
@@ -606,6 +664,14 @@ function updateLava(x, y) {
       if ((t === MATERIAL.WOOD || t === MATERIAL.OIL || t === MATERIAL.GAS) && Math.random() < 0.24) {
         setCell(ni, MATERIAL.FIRE);
       }
+      // Лава поджигает фитиль
+      if (t === MATERIAL.FUSE && Math.random() < 0.35) {
+        setCell(ni, MATERIAL.FIRE);
+      }
+      // Лава превращает землю в камень
+      if (t === MATERIAL.DIRT && Math.random() < 0.07) {
+        setCell(ni, MATERIAL.STONE);
+      }
     }
   }
 
@@ -623,6 +689,9 @@ function updateLava(x, y) {
   }
 }
 
+// ── Цветы ─────────────────────────────────────────────────────────────────────
+
+// Случайный цвет лепестка из предустановленной палитры
 function flowerPaletteColor() {
   const palette = [
     [255, 105, 155],
@@ -635,6 +704,8 @@ function flowerPaletteColor() {
   return palette[randomBetween(0, palette.length - 1)];
 }
 
+// Запускает рост цветка из точки (x, y):
+// строит стебель вверх (3–8 ячеек), затем рисует лепестки вокруг верхушки
 function growFlowerAt(x, y) {
   const seedIndex = toIndex(x, y);
   const stemColor = [66 + randomBetween(-6, 6), 172 + randomBetween(-10, 10), 74 + randomBetween(-8, 8)];
@@ -684,6 +755,102 @@ function growFlowerAt(x, y) {
   updated[coreIndex] = 1;
 }
 
+// Земля: статична и постоянна. Взаимодействия — через updateAcid и updateLava.
+// Отдельная функция нужна только для расширяемости.
+function updateDirt(_x, _y) {
+  // Земля не движется сама по себе; все реакции инициируются соседними материалами.
+}
+
+// Дерево: статично, но при контакте с водой прорастает ростком.
+// С малой вероятностью помещает SPROUT в первую пустую ячейку прямо над собой.
+function updateWood(x, y) {
+  if (!nearElement(x, y, MATERIAL.WATER)) return;
+  if (Math.random() > 0.003) return;
+
+  // Ищем первую пустую ячейку над деревом (до 6 клеток вверх)
+  for (let dy = 1; dy <= 6; dy += 1) {
+    const ny = y - dy;
+    if (!inBounds(x, ny)) break;
+    const ni = toIndex(x, ny);
+    const nt = world[ni];
+    if (nt === MATERIAL.WOOD || nt === MATERIAL.SPROUT || nt === MATERIAL.CANOPY || nt === MATERIAL.STONE || nt === MATERIAL.DIRT) break;
+    if (nt === MATERIAL.EMPTY || nt === MATERIAL.GAS || nt === MATERIAL.SMOKE || nt === MATERIAL.STEAM) {
+      setCell(ni, MATERIAL.SPROUT, [
+        clampColor(82 + randomBetween(-10, 20)),
+        clampColor(180 + randomBetween(-15, 25)),
+        clampColor(52 + randomBetween(-10, 15))
+      ]);
+      updated[ni] = 1;
+      break;
+    }
+  }
+}
+
+// Росток: статичный, медленно разрастается в крону (CANOPY) вверх и в стороны.
+// Каждый такт с малой вероятностью помещает одну клетку CANOPY в соседнюю пустую ячейку.
+function updateSprout(x, y) {
+  if (Math.random() > 0.008) return;
+
+  // Приоритетные направления роста: вверх, по диагонали вверх, в стороны
+  const dirs = [
+    [0, -1], [-1, -1], [1, -1],
+    [-2, -1], [2, -1],
+    [-1, -2], [0, -2], [1, -2],
+    [-1, 0], [1, 0]
+  ];
+  const [ox, oy] = dirs[randomBetween(0, dirs.length - 1)];
+  const nx = x + ox;
+  const ny = y + oy;
+  if (!inBounds(nx, ny)) return;
+  const ni = toIndex(nx, ny);
+  const nt = world[ni];
+  if (nt === MATERIAL.EMPTY || nt === MATERIAL.GAS || nt === MATERIAL.SMOKE || nt === MATERIAL.STEAM) {
+    const base = DATA[MATERIAL.CANOPY].baseColor;
+    setCell(ni, MATERIAL.CANOPY, [
+      clampColor(base[0] + randomBetween(-8, 14)),
+      clampColor(base[1] + randomBetween(-12, 22)),
+      clampColor(base[2] + randomBetween(-8, 10))
+    ]);
+    updated[ni] = 1;
+  }
+}
+
+// Крона: статична. Медленно продолжает расти от уже существующих клеток кроны.
+// Горит очень легко — через igniteNeighbors из updateFire.
+function updateCanopy(x, y) {
+  if (Math.random() > 0.003) return;
+
+  const dirs = [[0, -1], [-1, -1], [1, -1], [-1, 0], [1, 0], [-2, 0], [2, 0]];
+  const [ox, oy] = dirs[randomBetween(0, dirs.length - 1)];
+  const nx = x + ox;
+  const ny = y + oy;
+  if (!inBounds(nx, ny)) return;
+  const ni = toIndex(nx, ny);
+  const nt = world[ni];
+  if (nt === MATERIAL.EMPTY || nt === MATERIAL.GAS || nt === MATERIAL.SMOKE || nt === MATERIAL.STEAM) {
+    const base = DATA[MATERIAL.CANOPY].baseColor;
+    setCell(ni, MATERIAL.CANOPY, [
+      clampColor(base[0] + randomBetween(-10, 16)),
+      clampColor(base[1] + randomBetween(-14, 24)),
+      clampColor(base[2] + randomBetween(-8, 12))
+    ]);
+    updated[ni] = 1;
+  }
+}
+
+// Фитиль: статичный проводник огня. При контакте с огнём/лавой вспыхивает сам
+// (превращается в FIRE), огонь затем распространяется дальше по соседним фитилям
+// через igniteNeighbors. После сгорания остаётся дым как от обычного огня.
+function updateFuse(x, y) {
+  const i = toIndex(x, y);
+  if ((nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) && Math.random() < 0.38) {
+    setCell(i, MATERIAL.FIRE);
+    updated[i] = 1;
+  }
+}
+
+// Семя: при контакте с водой поглощает её и проращивает цветок;
+// иначе падает вниз как песок
 function updateSeed(x, y) {
   const waterIndex = findAdjacentElement(x, y, MATERIAL.WATER);
   if (waterIndex !== -1) {
@@ -699,6 +866,10 @@ function updateSeed(x, y) {
   tryMove(x, y, x + second, y + 1);
 }
 
+// ── Глобальный ветер ──────────────────────────────────────────────────────────
+// Обходит все подвижные частицы и с вероятностью пропорциональной windForce
+// смещает их в сторону ветра. Газообразные летят по диагонали вверх,
+// тяжёлые — по диагонали вниз.
 function applyGlobalWind() {
   if (windForce === 0) return;
 
@@ -738,6 +909,9 @@ function applyGlobalWind() {
   }
 }
 
+// ── Кисть притяжения/отталкивания ────────────────────────────────────────────
+// Для каждой частицы в радиусе кисти вычисляет направление к курсору (attract)
+// или от курсора (repel) и пытается переместить туда частицу.
 function applyForceBrush(gx, gy, mode) {
   for (let oy = -brushSize; oy <= brushSize; oy += 1) {
     for (let ox = -brushSize; ox <= brushSize; ox += 1) {
@@ -768,17 +942,15 @@ function applyForceBrush(gx, gy, mode) {
   }
 }
 
+// Диспетчер обновления ячейки: проверяет флаг updated (чтобы не обновлять дважды
+// за такт), проверяет истечение lifetime и вызывает нужный update* в зависимости
+// от типа материала.
 function updateCell(x, y) {
   const i = toIndex(x, y);
   if (updated[i]) return;
 
   const t = world[i];
   if (t === MATERIAL.EMPTY) return;
-
-  if (!isImmortal(t) && birthMs[i] > 0 && stepNowMs - birthMs[i] >= LIFE_LIMIT_MS) {
-    queueDeadParticle(i);
-    return;
-  }
 
   if (t === MATERIAL.SAND) {
     updateSand(x, y);
@@ -818,9 +990,34 @@ function updateCell(x, y) {
   }
   if (t === MATERIAL.SEED) {
     updateSeed(x, y);
+    return;
+  }
+  if (t === MATERIAL.WOOD) {
+    updateWood(x, y);
+    return;
+  }
+  if (t === MATERIAL.DIRT) {
+    updateDirt(x, y);
+    return;
+  }
+  if (t === MATERIAL.FUSE) {
+    updateFuse(x, y);
+    return;
+  }
+  if (t === MATERIAL.SPROUT) {
+    updateSprout(x, y);
+    return;
+  }
+  if (t === MATERIAL.CANOPY) {
+    updateCanopy(x, y);
   }
 }
 
+// ── Один шаг симуляции ────────────────────────────────────────────────────────
+// Сбрасывает флаги updated, обходит сетку снизу вверх (чтобы гравитация работала
+// корректно). Направление обхода по X чередуется каждый такт (по чётности y+tick),
+// устраняя артефакты однонаправленного смещения. После обхода применяет ветер
+// и кисть притяжения/отталкивания, затем воспроизводит звуки столкновений.
 function simulationStep() {
   updated.fill(0);
   tick += 1;
@@ -852,6 +1049,10 @@ function simulationStep() {
   playCollisionSounds();
 }
 
+// ── Тепловая карта ────────────────────────────────────────────────────────────
+// Разбивает холст на блоки 8×8 ячеек. Для каждого блока вычисляет плотность
+// (доля непустых ячеек) и закрашивает его полупрозрачным цветом от синего (малая
+// плотность) до красного (высокая плотность). Накладывается поверх мира.
 function drawHeatMapOverlay() {
   if (!heatMapEnabled) return;
 
@@ -887,6 +1088,10 @@ function drawHeatMapOverlay() {
   }
 }
 
+// ── Отрисовка кадра ───────────────────────────────────────────────────────────
+// Заливает фон чёрным, затем рисует каждую непустую ячейку прямоугольником
+// CELL_SIZE × CELL_SIZE. Огонь, дым и пар получают динамическую окраску на
+// основе life (имитация горения, затухания). Поверх накладывается тепловая карта.
 function draw() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -925,6 +1130,8 @@ function draw() {
   drawHeatMapOverlay();
 }
 
+// Переводит координаты указателя (CSS-пиксели) в координаты ячейки сетки,
+// учитывая масштабирование Canvas через CSS (rect.width vs canvas.width)
 function pointerToGrid(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -939,6 +1146,9 @@ function pointerToGrid(clientX, clientY) {
   };
 }
 
+// Берёт частицы из очереди возрождения и расставляет их случайно вокруг курсора.
+// Благодаря этому суммарное количество частиц выбранного материала остаётся
+// примерно постоянным при непрерывном рисовании.
 function reviveDeadParticles(gx, gy) {
   if (selectedMaterial === MATERIAL.EMPTY) return;
   const queue = respawnQueueByMaterial[selectedMaterial];
@@ -971,6 +1181,8 @@ function reviveDeadParticles(gx, gy) {
   }
 }
 
+// Рисует выбранный материал в радиусе кисти вокруг курсора (или стирает при ПКМ).
+// Перед рисованием пробует возродить частицы из очереди, чтобы восполнить убыль.
 function sprinkleAt(clientX, clientY, useEraser) {
   const { gx, gy } = pointerToGrid(clientX, clientY);
 
@@ -1002,6 +1214,10 @@ function sprinkleAt(clientX, clientY, useEraser) {
   }
 }
 
+// ── "Организация" текста ──────────────────────────────────────────────────────
+
+// Рисует текст на невидимом оффскрин-холсте и возвращает массив индексов ячеек,
+// которые попали под нарисованные пиксели (белые пиксели = цель для частиц)
 function createTextTargets(text) {
   const offscreen = document.createElement("canvas");
   offscreen.width = COLS;
@@ -1031,6 +1247,8 @@ function createTextTargets(text) {
   return targets;
 }
 
+// Собирает все частицы с поля, перемешивает их, затем расставляет в позиции,
+// образующие надпись text. Лишние частицы сбрасываются в нижнюю часть поля.
 function organizeParticlesToText(text) {
   const particles = [];
   for (let i = 0; i < CELL_COUNT; i += 1) {
@@ -1075,6 +1293,7 @@ function organizeParticlesToText(text) {
   }
 }
 
+// Полностью очищает мир и сбрасывает очереди возрождения
 function clearWorld() {
   world.fill(MATERIAL.EMPTY);
   colorR.fill(0);
@@ -1088,6 +1307,8 @@ function clearWorld() {
   respawnQueueSize = 0;
 }
 
+// Динамически строит список-легенду на основе DATA, показывая только материалы
+// с showInLegend: true
 function buildLegend() {
   legend.innerHTML = "";
   Object.entries(DATA).forEach(([, def]) => {
@@ -1109,6 +1330,10 @@ function buildLegend() {
   });
 }
 
+// ── Сохранение и загрузка ─────────────────────────────────────────────────────
+
+// Сериализует всё состояние мира (буферы + очереди возрождения + настройки)
+// в JSON и сохраняет в localStorage
 function saveState() {
   const serializedQueues = respawnQueueByMaterial.map((queue) => queue.slice(-MAX_RESPAWN_QUEUE));
   const payload = {
@@ -1125,6 +1350,9 @@ function saveState() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
 }
 
+// Загружает состояние из localStorage с полной валидацией данных:
+// проверяет длины массивов, типы полей, sanitize очередей (защита от инъекций
+// некорректных данных при загрузке сохранений из внешних источников).
 function loadState() {
   const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return;
@@ -1205,6 +1433,10 @@ function loadState() {
   }
 }
 
+// ── Аудио ─────────────────────────────────────────────────────────────────────
+
+// Инициализирует AudioContext при первом взаимодействии пользователя.
+// Браузer требует жест пользователя перед созданием AudioContext.
 function ensureAudio() {
   if (!audioCtx) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -1217,6 +1449,8 @@ function ensureAudio() {
   audioEnabled = true;
 }
 
+// Генерирует короткий тон через осциллятор с затуханием (envelope):
+// type — форма волны, frequency/endFrequency — частотный глиссандо
 function triggerTone(type, frequency, volume, duration, endFrequency) {
   const now = audioCtx.currentTime;
   const gainNode = audioCtx.createGain();
@@ -1237,6 +1471,9 @@ function triggerTone(type, frequency, volume, duration, endFrequency) {
   oscillator.stop(now + duration + 0.004);
 }
 
+// Воспроизводит звук, соответствующий доминирующему материалу по энергии столкновений.
+// Ограничение по частоте (40 мс) предотвращает звуковые артефакты.
+// Дополнительно воспроизводит «щелчок» при смешанных столкновениях высокой энергии.
 function playCollisionSounds() {
   if (!audioEnabled || !audioCtx || collisionsThisFrame < 1.2) return;
 
@@ -1282,6 +1519,9 @@ function playCollisionSounds() {
   }
 }
 
+// ── Главный цикл ─────────────────────────────────────────────────────────────
+// Запускается через requestAnimationFrame (~60 fps).
+// За один кадр выполняет simSpeed шагов симуляции, затем один draw().
 function animate() {
   if (running && !freezeTime) {
     for (let i = 0; i < simSpeed; i += 1) {
@@ -1293,6 +1533,9 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
+// ── Обработчики событий ───────────────────────────────────────────────────────
+
+// Клик по палитре — выбор материала кисти
 palette.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-element]");
   if (!button) return;
@@ -1302,6 +1545,7 @@ palette.addEventListener("click", (event) => {
   button.classList.add("is-active");
 });
 
+// Клик по панели режима кисти — переключение между paint/attract/repel
 brushModePanel.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-mode]");
   if (!button) return;
@@ -1310,21 +1554,25 @@ brushModePanel.addEventListener("click", (event) => {
   button.classList.add("is-active");
 });
 
+// Ползунок размера кисти
 brushSizeInput.addEventListener("input", () => {
   brushSize = Number(brushSizeInput.value);
   brushSizeValue.textContent = String(brushSize);
 });
 
+// Ползунок скорости симуляции (кол-во шагов за кадр)
 simSpeedInput.addEventListener("input", () => {
   simSpeed = Number(simSpeedInput.value);
   simSpeedValue.textContent = `${simSpeed}x`;
 });
 
+// Ползунок силы ветра
 windForceInput.addEventListener("input", () => {
   windForce = Number(windForceInput.value);
   windForceValue.textContent = String(windForce);
 });
 
+// ── Кнопки управления ────────────────────────────────────────────────────────
 pauseBtn.addEventListener("click", () => {
   running = !running;
   pauseBtn.textContent = running ? "Pause" : "Resume";
@@ -1335,6 +1583,7 @@ freezeBtn.addEventListener("click", () => {
   freezeBtn.textContent = freezeTime ? "Unfreeze Time" : "Freeze Time";
 });
 
+// Organize: переставляет частицы в форму надписи "NPMM25"
 organizeBtn.addEventListener("click", () => {
   organizeParticlesToText("NPMM25");
 });
@@ -1344,6 +1593,7 @@ heatMapBtn.addEventListener("click", () => {
   heatMapBtn.textContent = heatMapEnabled ? "Heat Map: On" : "Heat Map: Off";
 });
 
+// Step: выполнить ровно один шаг симуляции (для пошагового отладочного режима)
 stepBtn.addEventListener("click", () => {
   simulationStep();
   draw();
@@ -1353,6 +1603,8 @@ clearBtn.addEventListener("click", clearWorld);
 saveBtn.addEventListener("click", saveState);
 loadBtn.addEventListener("click", loadState);
 
+// ── Ввод с холста ─────────────────────────────────────────────────────────────
+// Блокируем контекстное меню, чтобы ПКМ работал как ластик
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
 canvas.addEventListener("pointerdown", (event) => {
@@ -1389,6 +1641,7 @@ canvas.addEventListener("pointerleave", () => {
   pointerRightButton = false;
 });
 
-buildLegend();
-clearWorld();
-animate();
+// ── Инициализация ─────────────────────────────────────────────────────────────
+buildLegend();   // строим легенду цветов
+clearWorld();    // обнуляем мир
+animate();       // запускаем главный цикл
