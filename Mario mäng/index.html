@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mario Mang - Canvas Platformer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="hud" aria-label="Game status">
+      <div class="hud-item"><span class="label">MARIO</span><span id="score">000000</span></div>
+      <div class="hud-item"><span class="label">COINS</span><span id="coins">x00</span></div>
+      <div class="hud-item"><span class="label">FORM</span><span id="form">SMALL</span></div>
+      <div class="hud-item"><span class="label">WORLD</span><span>1-1</span></div>
+      <div class="hud-item"><span class="label">TIME</span><span id="time">400</span></div>
+      <div class="hud-item"><span class="label">LIVES</span><span id="lives">x3</span></div>
+    </header>
+
+    <section class="canvas-wrap">
+      <canvas id="game" width="960" height="540" aria-label="Mario style platform game"></canvas>
+      <div class="overlay" id="overlay" hidden>
+        <h1 id="overlay-title">Super Mario</h1>
+        <p id="overlay-text">Press Enter to start</p>
+      </div>
+    </section>
+
+    <section class="touch-controls" aria-label="Touch controls">
+      <button class="ctrl" data-key="ArrowLeft">Left</button>
+      <button class="ctrl" data-key="ArrowRight">Right</button>
+      <button class="ctrl" data-key="ArrowDown">Down</button>
+      <button class="ctrl" data-key="ArrowUp">Jump</button>
+      <button class="ctrl" data-key="KeyX">Run</button>
+      <button class="ctrl" data-key="KeyZ">Fire</button>
+    </section>
+
+    <section class="ideas">
+      <h2>10 Cool Features To Add Next</h2>
+      <ol>
+        <li>Ghost replay of your best run.</li>
+        <li>Weather system with wind and rain physics.</li>
+        <li>Procedural secret cave levels.</li>
+        <li>Companion Yoshi AI helper mode.</li>
+        <li>Destructible terrain and breakable hills.</li>
+        <li>Dynamic soundtrack that changes by danger.</li>
+        <li>Local co-op split keyboard mode.</li>
+        <li>Boss arena with multi-stage patterns.</li>
+        <li>Photo mode with pixel filters.</li>
+        <li>Level editor with shareable codes.</li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
