@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Nightmare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="panel top-panel">
+      <h1>Digital Nightmare</h1>
+      <p class="subtitle">Lae pilt voi ava kaamera. Liiguta hiirt ja klopsa, et reaalsus laguneks.</p>
+    </header>
+
+    <section class="panel controls" aria-label="Controls">
+      <label class="file-control" for="imageInput">Upload Photo</label>
+      <input id="imageInput" type="file" accept="image/*" />
+
+      <button id="startCameraBtn" type="button">Start Camera</button>
+      <button id="stopCameraBtn" type="button" disabled>Stop Camera</button>
+      <button id="toggleMicBtn" type="button">Enable Mic</button>
+      <button id="mirrorModeBtn" type="button">Mirror: Off</button>
+      <button id="freezeBtn" type="button">Freeze Region</button>
+      <button id="asciiModeBtn" type="button">ASCII: Off</button>
+      <button id="edgeModeBtn" type="button">Edge Pulse: Off</button>
+      <button id="trailModeBtn" type="button">Ghost Trail: Off</button>
+      <button id="solarModeBtn" type="button">Solarize: Off</button>
+      <button id="saveChaosBtn" type="button">Chaos Save</button>
+
+      <label class="range-wrap" for="chaosRange">
+        Chaos
+        <input id="chaosRange" type="range" min="0" max="100" value="62" />
+      </label>
+
+      <label class="range-wrap" for="scanlineRange">
+        Scanline
+        <input id="scanlineRange" type="range" min="0" max="100" value="72" />
+      </label>
+
+      <label class="range-wrap" for="vhsRange">
+        VHS Noise
+        <input id="vhsRange" type="range" min="0" max="100" value="68" />
+      </label>
+
+      <label class="range-wrap" for="mirrorRange">
+        Mirror Blend
+        <input id="mirrorRange" type="range" min="0" max="100" value="80" />
+      </label>
+
+      <label class="range-wrap" for="freezeSizeRange">
+        Freeze Size
+        <input id="freezeSizeRange" type="range" min="10" max="55" value="24" />
+      </label>
+
+      <label class="range-wrap" for="asciiDensityRange">
+        ASCII Density
+        <input id="asciiDensityRange" type="range" min="20" max="100" value="56" />
+      </label>
+
+      <label class="range-wrap" for="artifactRange">
+        Save Artifact
+        <input id="artifactRange" type="range" min="0" max="100" value="62" />
+      </label>
+
+      <label class="range-wrap" for="edgeRange">
+        Edge Pulse
+        <input id="edgeRange" type="range" min="0" max="100" value="64" />
+      </label>
+
+      <label class="range-wrap" for="trailRange">
+        Ghost Trail
+        <input id="trailRange" type="range" min="0" max="100" value="58" />
+      </label>
+
+      <label class="range-wrap" for="solarRange">
+        Solarize
+        <input id="solarRange" type="range" min="0" max="100" value="52" />
+      </label>
+
+      <span id="micLevelText" class="status">Mic: off</span>
+      <span id="fxText" class="status">FX: scanline+vhs on</span>
+
+      <span id="statusText" class="status">Status: waiting for source</span>
+    </section>
+
+    <section class="stage-wrap" aria-label="Render stage">
+      <canvas id="nightmareCanvas"></canvas>
+      <video id="cameraFeed" autoplay playsinline muted hidden></video>
+      <img id="uploadedImage" alt="Uploaded source" hidden />
+      <div class="vignette" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
