@@ -1,6 +1,21 @@
-const canvas = document.getElementById("sandbox");
-const ctx = canvas.getContext("2d", { alpha: false });
+// =============================================================================
+// PARTICLE SANDBOX — симуляция клеточного автомата на базе HTML5 Canvas
+//
+// Принцип работы:
+//  • Мир разбит на сетку ячеек (COLS × ROWS). Каждая ячейка хранит тип
+//    материала, цвет (R/G/B) и «жизнь» (life) — счётчик тактов до исчезновения.
+//  • Каждый кадр вызывается simulationStep(): обходит все ячейки снизу вверх
+//    и применяет правила физики для каждого материала (падение, течение и т.д.).
+//  • После шага симуляции draw() рисует мир на Canvas пикселями CELL_SIZE×CELL_SIZE.
+//  • Пользователь рисует материалы мышью; кнопки управляют паузой, ветром,
+//    тепловой картой и режимами кисти (рисование / притяжение / отталкивание).
+// =============================================================================
 
+// ── DOM-элементы ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById("sandbox");
+const ctx = canvas.getContext("2d", { alpha: false }); // alpha:false ускоряет отрисовку
+
+// Кнопки управления симуляцией
 const pauseBtn = document.getElementById("pauseBtn");
 const freezeBtn = document.getElementById("freezeBtn");
 const organizeBtn = document.getElementById("organizeBtn");
@@ -9,9 +24,13 @@ const stepBtn = document.getElementById("stepBtn");
 const clearBtn = document.getElementById("clearBtn");
 const saveBtn = document.getElementById("saveBtn");
 const loadBtn = document.getElementById("loadBtn");
+
+// Панели выбора материала, режима кисти и легенды
 const palette = document.getElementById("palette");
 const brushModePanel = document.getElementById("brushMode");
 const legend = document.getElementById("legend");
+
+// Ползунки настроек
 const brushSizeInput = document.getElementById("brushSize");
 const brushSizeValue = document.getElementById("brushSizeValue");
 const simSpeedInput = document.getElementById("simSpeed");
@@ -19,14 +38,17 @@ const simSpeedValue = document.getElementById("simSpeedValue");
 const windForceInput = document.getElementById("windForce");
 const windForceValue = document.getElementById("windForceValue");
 
-const CELL_SIZE = 4;
+// ── Константы сетки ───────────────────────────────────────────────────────────
+const CELL_SIZE = 4;                              // пикселей на одну ячейку
 const COLS = Math.floor(canvas.width / CELL_SIZE);
 const ROWS = Math.floor(canvas.height / CELL_SIZE);
-const CELL_COUNT = COLS * ROWS;
-const SAVE_KEY = "particle-sandbox-v4";
-const LIFE_LIMIT_MS = 10000;
-const MAX_RESPAWN_QUEUE = 18000;
+const CELL_COUNT = COLS * ROWS;                   // общее число ячеек
+const SAVE_KEY = "particle-sandbox-v4";           // ключ localStorage для сохранений
+const LIFE_LIMIT_MS = 10000;                      // мс до «смерти» частицы (не бессмертной)
+const MAX_RESPAWN_QUEUE = 18000;                  // макс. частиц в очереди возрождения
 
+// ── Перечисление материалов ───────────────────────────────────────────────────
+// Каждый материал — числовой идентификатор. Значение хранится в массиве world[].
 const MATERIAL = {
   EMPTY: 0,
   SAND: 1,
@@ -46,12 +68,17 @@ const MATERIAL = {
 };
 const MATERIAL_COUNT = 15;
 
+// ── Режимы кисти ──────────────────────────────────────────────────────────────
+// PAINT  — рисует выбранный материал
+// ATTRACT — притягивает частицы к курсору
+// REPEL   — отталкивает частицы от курсора
 const BRUSH_MODE = {
   PAINT: "paint",
   ATTRACT: "attract",
   REPEL: "repel"
 };
 
+// Карта «имя кнопки → идентификатор материала» для обработки кликов по палитре
 const MATERIAL_FROM_NAME = {
   sand: MATERIAL.SAND,
   water: MATERIAL.WATER,
@@ -68,6 +95,9 @@ const MATERIAL_FROM_NAME = {
   eraser: MATERIAL.EMPTY
 };
 
+// ── Метаданные материалов ─────────────────────────────────────────────────────
+// baseColor — базовый RGB-цвет (при спавне добавляется случайный шум ±14)
+// showInLegend — показывать ли материал в легенде интерфейса
 const DATA = {
   [MATERIAL.EMPTY]: { name: "Empty", baseColor: [0, 0, 0], showInLegend: false },
   [MATERIAL.SAND]: { name: "Sand", baseColor: [225, 194, 106], showInLegend: true },
@@ -86,56 +116,74 @@ const DATA = {
   [MATERIAL.FLOWER_PETAL]: { name: "Petal", baseColor: [242, 122, 180], showInLegend: false }
 };
 
-const world = new Uint8Array(CELL_COUNT);
-const colorR = new Uint8Array(CELL_COUNT);
-const colorG = new Uint8Array(CELL_COUNT);
-const colorB = new Uint8Array(CELL_COUNT);
-const life = new Uint8Array(CELL_COUNT);
-const birthMs = new Uint32Array(CELL_COUNT);
-const updated = new Uint8Array(CELL_COUNT);
+// ── Буферы состояния мира ─────────────────────────────────────────────────────
+// Для максимальной производительности состояние хранится в типизированных массивах.
+// Индекс ячейки (x, y) вычисляется как y * COLS + x (функция toIndex).
+const world = new Uint8Array(CELL_COUNT);      // тип материала в каждой ячейке
+const colorR = new Uint8Array(CELL_COUNT);     // R-компонента цвета ячейки
+const colorG = new Uint8Array(CELL_COUNT);     // G-компонента цвета ячейки
+const colorB = new Uint8Array(CELL_COUNT);     // B-компонента цвета ячейки
+const life = new Uint8Array(CELL_COUNT);       // оставшийся «ресурс жизни» (такты)
+const birthMs = new Uint32Array(CELL_COUNT);   // время рождения частицы (мс, performance.now)
+const updated = new Uint8Array(CELL_COUNT);    // флаг «уже обновлена в этом такте»
 
-let selectedMaterial = MATERIAL.SAND;
-let brushMode = BRUSH_MODE.PAINT;
+// ── Переменные состояния симуляции ────────────────────────────────────────────
+let selectedMaterial = MATERIAL.SAND; // текущий выбранный материал кисти
+let brushMode = BRUSH_MODE.PAINT;     // режим кисти
 let brushSize = Number(brushSizeInput.value);
-let simSpeed = Number(simSpeedInput.value);
-let windForce = Number(windForceInput.value);
-let running = true;
-let freezeTime = false;
-let heatMapEnabled = false;
-let tick = 0;
-let stepNowMs = 0;
+let simSpeed = Number(simSpeedInput.value);   // кол-во шагов симуляции за кадр
+let windForce = Number(windForceInput.value); // сила ветра (-5..+5)
+let running = true;     // симуляция запущена
+let freezeTime = false; // «заморозка»: физика стоит, но draw работает
+let heatMapEnabled = false; // показывать тепловую карту плотности
+let tick = 0;           // номер текущего такта (используется для чередования направления обхода)
+let stepNowMs = 0;      // время начала текущего шага (для проверки lifetime)
 
+// ── Состояние указателя ───────────────────────────────────────────────────────
 let pointerDown = false;
 let pointerX = 0;
 let pointerY = 0;
-let pointerRightButton = false;
+let pointerRightButton = false; // ПКМ — режим ластика
 
+// ── Очередь возрождения ───────────────────────────────────────────────────────
+// Когда частица умирает (истёк LIFE_LIMIT_MS), она сохраняется в respawnQueue.
+// При следующем рисовании тем же материалом «мёртвые» частицы появляются снова,
+// что создаёт эффект бесконечного потока.
 const respawnQueueByMaterial = Array.from({ length: MATERIAL_COUNT }, () => []);
 let respawnQueueSize = 0;
 
+// ── Аудио-состояние ───────────────────────────────────────────────────────────
+// Звуки генерируются через Web Audio API на основе столкновений частиц.
 let collisionsThisFrame = 0;
 const collisionEnergyByMaterial = new Float32Array(MATERIAL_COUNT);
-let mixedCollisionEnergy = 0;
+let mixedCollisionEnergy = 0;  // энергия смешанных столкновений (разные материалы)
 let audioEnabled = false;
 let audioCtx = null;
 let lastSoundTime = 0;
 
+// ── Вспомогательные функции ───────────────────────────────────────────────────
+
+// Преобразует (x, y) в линейный индекс массива
 function toIndex(x, y) {
   return y * COLS + x;
 }
 
+// Проверяет, что координаты внутри границ сетки
 function inBounds(x, y) {
   return x >= 0 && x < COLS && y >= 0 && y < ROWS;
 }
 
+// Случайное целое число в диапазоне [min, max] включительно
 function randomBetween(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+// Ограничивает значение цвета в диапазоне 0..255
 function clampColor(v) {
   return Math.max(0, Math.min(255, v));
 }
 
+// Начальное значение «жизни» для материалов с конечным временем существования
 function defaultLifeFor(type) {
   if (type === MATERIAL.FIRE) return randomBetween(12, 30);
   if (type === MATERIAL.SMOKE) return randomBetween(26, 64);
@@ -143,6 +191,8 @@ function defaultLifeFor(type) {
   return 0;
 }
 
+// Записывает материал и его цвет в ячейку по индексу.
+// rgbOverride — если передан, использует точный цвет; иначе базовый цвет ± шум.
 function setCell(index, type, rgbOverride) {
   world[index] = type;
 
@@ -171,6 +221,7 @@ function setCell(index, type, rgbOverride) {
   birthMs[index] = Math.floor(performance.now());
 }
 
+// Восстанавливает частицу из сохранённого объекта (используется при возрождении)
 function setParticle(index, particle) {
   world[index] = particle.type;
   colorR[index] = particle.r;
@@ -180,6 +231,8 @@ function setParticle(index, particle) {
   birthMs[index] = particle.birth;
 }
 
+// Меняет местами содержимое двух ячеек (тип, цвет, life, время рождения).
+// Является основной операцией движения частиц в симуляции.
 function swapCells(i1, i2) {
   const t = world[i1];
   world[i1] = world[i2];
@@ -209,6 +262,7 @@ function swapCells(i1, i2) {
   updated[i2] = 1;
 }
 
+// Усредняет цвета двух ячеек — эффект визуального смешивания при столкновении
 function blendColors(i1, i2) {
   const r = Math.floor((colorR[i1] + colorR[i2]) * 0.5);
   const g = Math.floor((colorG[i1] + colorG[i2]) * 0.5);
@@ -221,6 +275,8 @@ function blendColors(i1, i2) {
   colorB[i2] = b;
 }
 
+// Помещает умершую частицу в очередь возрождения (если очередь не переполнена),
+// затем очищает ячейку. Очередь сортирована по типу материала.
 function queueDeadParticle(index) {
   const type = world[index];
   if (type === MATERIAL.EMPTY) return;
