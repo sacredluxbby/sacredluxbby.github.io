@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle Sandbox</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1>Particle Sandbox</h1>
+      <div class="actions">
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="freezeBtn" type="button">Freeze Time</button>
+        <button id="organizeBtn" type="button">Self-Organize</button>
+        <button id="heatMapBtn" type="button">Heat Map: Off</button>
+        <button id="stepBtn" type="button">Step</button>
+        <button id="clearBtn" type="button">Clear</button>
+        <button id="saveBtn" type="button">Save</button>
+        <button id="loadBtn" type="button">Load</button>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Element palette and tools">
+      <div class="palette" id="palette">
+        <button class="element is-active" data-element="sand">Sand</button>
+        <button class="element" data-element="water">Water</button>
+        <button class="element" data-element="gas">Gas</button>
+        <button class="element" data-element="stone">Stone</button>
+        <button class="element" data-element="wood">Wood</button>
+        <button class="element" data-element="oil">Oil</button>
+        <button class="element" data-element="fire">Fire</button>
+        <button class="element" data-element="smoke">Smoke</button>
+        <button class="element" data-element="steam">Steam</button>
+        <button class="element" data-element="acid">Acid</button>
+        <button class="element" data-element="lava">Lava</button>
+        <button class="element" data-element="seed">Flower Seed</button>
+        <button class="element" data-element="eraser">Eraser</button>
+      </div>
+
+      <div class="palette" id="brushMode" aria-label="Brush mode">
+        <button class="mode is-active" data-mode="paint">Sprinkle</button>
+        <button class="mode" data-mode="attract">Attract</button>
+        <button class="mode" data-mode="repel">Repel</button>
+      </div>
+
+      <div class="toolbox">
+        <label for="brushSize">Brush</label>
+        <input id="brushSize" type="range" min="1" max="16" value="4">
+        <output id="brushSizeValue" for="brushSize">4</output>
+
+        <label for="simSpeed">Speed</label>
+        <input id="simSpeed" type="range" min="1" max="8" value="3">
+        <output id="simSpeedValue" for="simSpeed">3x</output>
+
+        <label for="windForce">Wind</label>
+        <input id="windForce" type="range" min="-5" max="5" value="0">
+        <output id="windForceValue" for="windForce">0</output>
+      </div>
+    </section>
+
+    <section class="stage-wrap">
+      <canvas id="sandbox" width="1280" height="820" aria-label="Particle simulation area"></canvas>
+      <p class="hint">Left click: sprinkle and rebirth particles. Right click: eraser. Attract/Repel modes apply force. Time Freeze is for clean screenshots.</p>
+    </section>
+
+    <footer class="legend" id="legend"></footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
