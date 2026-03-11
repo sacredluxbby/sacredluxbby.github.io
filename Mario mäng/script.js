@@ -29,11 +29,18 @@ const keys = {
 
 const justPressed = {};
 
+const DIFFICULTIES = [
+  { name: "EASY", lives: 5, timer: 520, enemyMode: "light", enemySpeed: 0.85, helperLedges: 2 },
+  { name: "NORMAL", lives: 3, timer: 430, enemyMode: "medium", enemySpeed: 1.0, helperLedges: 1 },
+  { name: "HARD", lives: 2, timer: 360, enemyMode: "full", enemySpeed: 1.15, helperLedges: 0 }
+];
+
 const game = {
   started: false,
   gameOver: false,
   won: false,
   zone: "overworld",
+  difficultyIndex: 0,
   score: 0,
   coins: 0,
   lives: 3,
@@ -256,6 +263,10 @@ function cloneData(data) {
   return JSON.parse(JSON.stringify(data));
 }
 
+function getDifficulty() {
+  return DIFFICULTIES[game.difficultyIndex] || DIFFICULTIES[0];
+}
+
 function createUndergroundLayout() {
   const width = 74 * TILE;
   const floorY = H - 78;
@@ -369,6 +380,7 @@ function exitUnderground() {
 }
 
 function resetLevel(mapId = 0) {
+  const difficulty = getDifficulty();
   const variant = ((mapId % 3) + 3) % 3;
 
   world.width = 194 * TILE;
@@ -638,6 +650,24 @@ function resetLevel(mapId = 0) {
       { x: 139 * TILE, y: H - 206, w: TILE * 1.8, h: 132 },
       { x: 161 * TILE, y: H - 174, w: TILE * 1.8, h: 100 }
     ];
+  }
+
+  if (difficulty.enemyMode === "light") {
+    world.enemies = world.enemies.filter((_, i) => i % 2 === 0);
+  } else if (difficulty.enemyMode === "medium") {
+    world.enemies = world.enemies.filter((_, i) => i % 3 !== 2);
+  }
+
+  world.enemies = world.enemies.map((e) => ({
+    ...e,
+    vx: Math.sign(e.vx || -1) * Math.max(0.65, Math.abs(e.vx) * difficulty.enemySpeed)
+  }));
+
+  if (difficulty.helperLedges >= 1) {
+    world.platforms.push({ x: (world.flag.x / TILE - 9) * TILE, y: H - 182, w: 3 * TILE, h: 18 });
+  }
+  if (difficulty.helperLedges >= 2) {
+    world.platforms.push({ x: (world.flag.x / TILE - 5) * TILE, y: H - 214, w: 3 * TILE, h: 18 });
   }
 
   world.powerUps = [];
@@ -1362,13 +1392,14 @@ function loop(now) {
 
 function restartGame() {
   game.mapCycle = (game.mapCycle + 1) % 3;
+  const difficulty = getDifficulty();
   game.started = true;
   game.gameOver = false;
   game.won = false;
   game.score = 0;
   game.coins = 0;
-  game.lives = 3;
-  game.timer = 400;
+  game.lives = difficulty.lives;
+  game.timer = difficulty.timer;
   game.clockTick = 0;
   game.zone = "overworld";
   game.warpCooldown = 0;
@@ -1392,6 +1423,14 @@ window.addEventListener("keydown", (e) => {
 
   if ((e.code === "Enter" || e.code === "Space") && (!game.started || game.gameOver || game.won)) {
     restartGame();
+  }
+
+  if (e.code === "KeyC" && (!game.started || game.gameOver || game.won)) {
+    game.difficultyIndex = (game.difficultyIndex + 1) % DIFFICULTIES.length;
+    showOverlay(
+      "Mario Mang v4",
+      `Enter/Space start | C difficulty: ${getDifficulty().name} | Left/Right move | Down pipe warp`
+    );
   }
 });
 
@@ -1433,7 +1472,10 @@ for (const btn of document.querySelectorAll(".ctrl")) {
   btn.addEventListener("mouseleave", release);
 }
 
-showOverlay("Mario Mang v4", "Enter/Space start | Left/Right move | Down pipe warp | Up jump | X run | Z fire");
+showOverlay(
+  "Mario Mang v4",
+  `Enter/Space start | C difficulty: ${getDifficulty().name} | Left/Right move | Down pipe warp`
+);
 resetLevel(0);
 updateHUD();
 requestAnimationFrame(loop);
