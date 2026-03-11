@@ -65,12 +65,17 @@ const MATERIAL = {
   SEED: 12,
   FLOWER_STEM: 13,
   FLOWER_PETAL: 14,
-  DIRT: 15,   // земля — статичная, кислота растворяет
+  DIRT: 15,   // земля — статичная
   FUSE: 16,   // фитиль — проводник огня, сгорает
   SPROUT: 17, // росток — вырастает на дереве рядом с водой, расширяется в крону
-  CANOPY: 18  // крона дерева — легко горит
+  CANOPY: 18, // крона дерева — легко горит
+  WET_SAND: 19,
+  HOT_SAND: 20,
+  GLASS: 21,
+  WET_WOOD: 22,
+  GUNPOWDER: 23
 };
-const MATERIAL_COUNT = 19;
+const MATERIAL_COUNT = 24;
 
 // ── Режимы кисти ──────────────────────────────────────────────────────────────
 // PAINT  — рисует выбранный материал
@@ -100,6 +105,7 @@ const MATERIAL_FROM_NAME = {
   fuse: MATERIAL.FUSE,
   sprout: MATERIAL.SPROUT,
   canopy: MATERIAL.CANOPY,
+  gunpowder: MATERIAL.GUNPOWDER,
   eraser: MATERIAL.EMPTY
 };
 
@@ -125,7 +131,12 @@ const DATA = {
   [MATERIAL.DIRT]: { name: "Dirt", baseColor: [101, 67, 33], showInLegend: true },
   [MATERIAL.FUSE]: { name: "Fuse", baseColor: [210, 190, 140], showInLegend: true },
   [MATERIAL.SPROUT]: { name: "Sprout", baseColor: [82, 180, 52], showInLegend: true },
-  [MATERIAL.CANOPY]: { name: "Tree Crown", baseColor: [38, 110, 34], showInLegend: true }
+  [MATERIAL.CANOPY]: { name: "Tree Crown", baseColor: [38, 110, 34], showInLegend: true },
+  [MATERIAL.WET_SAND]: { name: "Wet Sand", baseColor: [167, 145, 94], showInLegend: true },
+  [MATERIAL.HOT_SAND]: { name: "Hot Sand", baseColor: [240, 152, 74], showInLegend: true },
+  [MATERIAL.GLASS]: { name: "Glass", baseColor: [171, 228, 236], showInLegend: true },
+  [MATERIAL.WET_WOOD]: { name: "Wet Wood", baseColor: [96, 78, 62], showInLegend: true },
+  [MATERIAL.GUNPOWDER]: { name: "Gunpowder", baseColor: [61, 61, 66], showInLegend: true }
 };
 
 // ── Буферы состояния мира ─────────────────────────────────────────────────────
@@ -200,6 +211,7 @@ function defaultLifeFor(type) {
   if (type === MATERIAL.FIRE) return randomBetween(12, 30);
   if (type === MATERIAL.SMOKE) return randomBetween(26, 64);
   if (type === MATERIAL.STEAM) return randomBetween(34, 86);
+  if (type === MATERIAL.HOT_SAND) return randomBetween(30, 70);
   return 0;
 }
 
@@ -336,7 +348,7 @@ function registerCollision(i, j, impact) {
 function canDisplace(type, targetType) {
   if (targetType === MATERIAL.EMPTY) return true;
 
-  if (type === MATERIAL.SAND) {
+  if (type === MATERIAL.SAND || type === MATERIAL.WET_SAND || type === MATERIAL.HOT_SAND || type === MATERIAL.GUNPOWDER) {
     return targetType === MATERIAL.WATER || targetType === MATERIAL.OIL || targetType === MATERIAL.SMOKE || targetType === MATERIAL.STEAM;
   }
   if (type === MATERIAL.SEED) {
@@ -365,7 +377,7 @@ function canDisplace(type, targetType) {
 
 // Статичные материалы не двигаются сами по себе (камень, дерево, части цветка, земля, фитиль, ростки, крона)
 function isStatic(type) {
-  return type === MATERIAL.STONE || type === MATERIAL.WOOD || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY;
+  return type === MATERIAL.STONE || type === MATERIAL.WOOD || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY || type === MATERIAL.GLASS || type === MATERIAL.WET_WOOD;
 }
 
 // Подвижные материалы — все не-пустые и не-статичные
@@ -375,7 +387,7 @@ function isMovable(type) {
 
 // Бессмертные материалы — не истекают по таймеру LIFE_LIMIT_MS
 function isImmortal(type) {
-  return type === MATERIAL.STONE || type === MATERIAL.SEED || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY;
+  return type === MATERIAL.STONE || type === MATERIAL.SEED || type === MATERIAL.FLOWER_STEM || type === MATERIAL.FLOWER_PETAL || type === MATERIAL.DIRT || type === MATERIAL.FUSE || type === MATERIAL.SPROUT || type === MATERIAL.CANOPY || type === MATERIAL.GLASS || type === MATERIAL.WET_WOOD;
 }
 
 // Проверяет, есть ли в соседних 8 ячейках хотя бы одна ячейка заданного типа
@@ -434,6 +446,60 @@ function tryMove(x, y, nx, ny) {
 
 // Песок: падает вниз, затем по диагонали (случайный приоритет), не течёт горизонтально
 function updateSand(x, y) {
+  const i = toIndex(x, y);
+  if (nearElement(x, y, MATERIAL.WATER) && Math.random() < 0.05) {
+    setCell(i, MATERIAL.WET_SAND);
+    updated[i] = 1;
+    return;
+  }
+
+  if ((nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) && Math.random() < 0.03) {
+    setCell(i, MATERIAL.HOT_SAND);
+    updated[i] = 1;
+    return;
+  }
+
+  if (tryMove(x, y, x, y + 1)) return;
+  const first = Math.random() < 0.5 ? -1 : 1;
+  const second = -first;
+  if (tryMove(x, y, x + first, y + 1)) return;
+  tryMove(x, y, x + second, y + 1);
+}
+
+// Мокрый песок: тяжелее обычного, комкуется и может нагреваться до плавления.
+function updateWetSand(x, y) {
+  const i = toIndex(x, y);
+  if ((nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) && Math.random() < 0.08) {
+    setCell(i, MATERIAL.HOT_SAND);
+    updated[i] = 1;
+    return;
+  }
+
+  if (!nearElement(x, y, MATERIAL.WATER) && Math.random() < 0.01) {
+    setCell(i, MATERIAL.SAND);
+    updated[i] = 1;
+    return;
+  }
+
+  if (tryMove(x, y, x, y + 1)) return;
+  const first = Math.random() < 0.5 ? -1 : 1;
+  const second = -first;
+  if (tryMove(x, y, x + first, y + 1)) return;
+  if (Math.random() < 0.5) {
+    tryMove(x, y, x + second, y + 1);
+  }
+}
+
+// Нагретый песок: кратковременно остаётся текучим, затем остывает в стекло.
+function updateHotSand(x, y) {
+  const i = toIndex(x, y);
+  if (life[i] > 0) life[i] -= 1;
+  if (life[i] === 0) {
+    setCell(i, MATERIAL.GLASS);
+    updated[i] = 1;
+    return;
+  }
+
   if (tryMove(x, y, x, y + 1)) return;
   const first = Math.random() < 0.5 ? -1 : 1;
   const second = -first;
@@ -443,6 +509,13 @@ function updateSand(x, y) {
 
 // Вода: падает вниз, по диагонали вниз, затем растекается горизонтально
 function updateWater(x, y) {
+  const i = toIndex(x, y);
+  if ((nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) && Math.random() < 0.1) {
+    setCell(i, MATERIAL.STEAM);
+    updated[i] = 1;
+    return;
+  }
+
   if (tryMove(x, y, x, y + 1)) return;
 
   const firstDiag = Math.random() < 0.5 ? -1 : 1;
@@ -513,6 +586,78 @@ function updateSteam(x, y) {
   tryMove(x, y, x + second, y);
 }
 
+// Взрыв пороха: локальная волна огня, испарение воды и поджог горючих материалов.
+function explodeGunpowder(x, y) {
+  if (!inBounds(x, y)) return;
+  const center = toIndex(x, y);
+  setCell(center, MATERIAL.FIRE);
+  updated[center] = 1;
+
+  const radius = randomBetween(2, 4);
+  for (let oy = -radius; oy <= radius; oy += 1) {
+    for (let ox = -radius; ox <= radius; ox += 1) {
+      if (ox === 0 && oy === 0) continue;
+      const nx = x + ox;
+      const ny = y + oy;
+      if (!inBounds(nx, ny)) continue;
+
+      const dist = Math.abs(ox) + Math.abs(oy);
+      if (dist > radius + 1) continue;
+
+      const ni = toIndex(nx, ny);
+      const t = world[ni];
+
+      registerCollision(center, ni, 1.6);
+
+      if (t === MATERIAL.STONE || t === MATERIAL.GLASS) continue;
+      if (t === MATERIAL.WATER) {
+        setCell(ni, Math.random() < 0.86 ? MATERIAL.STEAM : MATERIAL.SMOKE);
+        updated[ni] = 1;
+        continue;
+      }
+      if (t === MATERIAL.WET_SAND && Math.random() < 0.6) {
+        setCell(ni, MATERIAL.HOT_SAND);
+        updated[ni] = 1;
+        continue;
+      }
+
+      const heatChance = Math.max(0.2, 0.95 - dist * 0.18);
+      if (
+        t === MATERIAL.EMPTY ||
+        t === MATERIAL.GAS ||
+        t === MATERIAL.SMOKE ||
+        t === MATERIAL.STEAM ||
+        t === MATERIAL.OIL ||
+        t === MATERIAL.WOOD ||
+        t === MATERIAL.WET_WOOD ||
+        t === MATERIAL.FUSE ||
+        t === MATERIAL.CANOPY ||
+        t === MATERIAL.SPROUT ||
+        t === MATERIAL.GUNPOWDER
+      ) {
+        if (Math.random() < heatChance) {
+          setCell(ni, MATERIAL.FIRE);
+          updated[ni] = 1;
+        }
+      }
+    }
+  }
+}
+
+// Порох: ведёт себя как тяжёлый сыпучий материал, но детонирует от огня и лавы.
+function updateGunpowder(x, y) {
+  if (nearElement(x, y, MATERIAL.FIRE) || nearElement(x, y, MATERIAL.LAVA)) {
+    explodeGunpowder(x, y);
+    return;
+  }
+
+  if (tryMove(x, y, x, y + 1)) return;
+  const first = Math.random() < 0.5 ? -1 : 1;
+  const second = -first;
+  if (tryMove(x, y, x + first, y + 1)) return;
+  tryMove(x, y, x + second, y + 1);
+}
+
 // Поджигает соседние горючие ячейки (дерево, масло, газ) с заданной вероятностью
 function igniteNeighbors(x, y, chance) {
   for (let oy = -1; oy <= 1; oy += 1) {
@@ -526,6 +671,13 @@ function igniteNeighbors(x, y, chance) {
       if ((t === MATERIAL.WOOD || t === MATERIAL.OIL || t === MATERIAL.GAS) && Math.random() < chance) {
         setCell(ni, MATERIAL.FIRE);
         updated[ni] = 1;
+      }
+      if (t === MATERIAL.WET_WOOD && Math.random() < chance * 0.35) {
+        setCell(ni, MATERIAL.FIRE);
+        updated[ni] = 1;
+      }
+      if (t === MATERIAL.GUNPOWDER && Math.random() < Math.min(0.98, chance * 4)) {
+        explodeGunpowder(nx, ny);
       }
       // Фитиль воспламеняется от огня быстрее чем дерево (chance × 2.5)
       if (t === MATERIAL.FUSE && Math.random() < Math.min(0.92, chance * 2.5)) {
@@ -551,6 +703,37 @@ function igniteNeighbors(x, y, chance) {
 function updateFire(x, y) {
   const i = toIndex(x, y);
   if (life[i] > 0) life[i] -= 1;
+
+  for (let oy = -1; oy <= 1; oy += 1) {
+    for (let ox = -1; ox <= 1; ox += 1) {
+      if (ox === 0 && oy === 0) continue;
+      const nx = x + ox;
+      const ny = y + oy;
+      if (!inBounds(nx, ny)) continue;
+      const ni = toIndex(nx, ny);
+      const t = world[ni];
+
+      if (t === MATERIAL.WATER && Math.random() < 0.45) {
+        setCell(ni, MATERIAL.STEAM);
+        updated[ni] = 1;
+      }
+      if (t === MATERIAL.WET_SAND && Math.random() < 0.18) {
+        setCell(ni, MATERIAL.HOT_SAND);
+        updated[ni] = 1;
+      }
+      if (t === MATERIAL.SAND && Math.random() < 0.1) {
+        setCell(ni, MATERIAL.HOT_SAND);
+        updated[ni] = 1;
+      }
+      if (t === MATERIAL.WET_WOOD && Math.random() < 0.1) {
+        setCell(ni, MATERIAL.WOOD);
+        updated[ni] = 1;
+      }
+      if (t === MATERIAL.GUNPOWDER && Math.random() < 0.9) {
+        explodeGunpowder(nx, ny);
+      }
+    }
+  }
 
   if (nearElement(x, y, MATERIAL.WATER) && Math.random() < 0.35) {
     setCell(i, Math.random() < 0.6 ? MATERIAL.STEAM : MATERIAL.SMOKE);
@@ -595,28 +778,10 @@ function updateOil(x, y) {
   }
 }
 
-// Кислота: разъедает дерево (превращает в газ/пустоту), нейтрализуется лавой;
-// течёт как вода
+// Кислота: больше не растворяет твёрдые материалы, только смешивается и течёт.
+// При контакте с лавой может частично переходить в дым.
 function updateAcid(x, y) {
   const i = toIndex(x, y);
-
-  for (let oy = -1; oy <= 1; oy += 1) {
-    for (let ox = -1; ox <= 1; ox += 1) {
-      if (ox === 0 && oy === 0) continue;
-      const nx = x + ox;
-      const ny = y + oy;
-      if (!inBounds(nx, ny)) continue;
-      const ni = toIndex(nx, ny);
-      const t = world[ni];
-      if ((t === MATERIAL.WOOD) && Math.random() < 0.03) {
-        setCell(ni, Math.random() < 0.55 ? MATERIAL.GAS : MATERIAL.EMPTY);
-      }
-      // Кислота медленно разъедает землю
-      if (t === MATERIAL.DIRT && Math.random() < 0.022) {
-        setCell(ni, MATERIAL.EMPTY);
-      }
-    }
-  }
 
   if (nearElement(x, y, MATERIAL.LAVA) && Math.random() < 0.12) {
     setCell(i, MATERIAL.SMOKE);
@@ -659,6 +824,10 @@ function updateLava(x, y) {
           updated[i] = 1;
           return;
         }
+      }
+
+      if ((t === MATERIAL.SAND || t === MATERIAL.WET_SAND) && Math.random() < 0.2) {
+        setCell(ni, MATERIAL.HOT_SAND);
       }
 
       if ((t === MATERIAL.WOOD || t === MATERIAL.OIL || t === MATERIAL.GAS) && Math.random() < 0.24) {
@@ -761,12 +930,8 @@ function updateDirt(_x, _y) {
   // Земля не движется сама по себе; все реакции инициируются соседними материалами.
 }
 
-// Дерево: статично, но при контакте с водой прорастает ростком.
-// С малой вероятностью помещает SPROUT в первую пустую ячейку прямо над собой.
-function updateWood(x, y) {
-  if (!nearElement(x, y, MATERIAL.WATER)) return;
-  if (Math.random() > 0.003) return;
-
+function growSproutAbove(x, y, growthChance) {
+  if (Math.random() > growthChance) return;
   // Ищем первую пустую ячейку над деревом (до 6 клеток вверх)
   for (let dy = 1; dy <= 6; dy += 1) {
     const ny = y - dy;
@@ -784,6 +949,31 @@ function updateWood(x, y) {
       break;
     }
   }
+}
+
+// Дерево не растворяется в воде: оно впитывает влагу и становится WET_WOOD.
+function updateWood(x, y) {
+  const i = toIndex(x, y);
+  const waterIndex = findAdjacentElement(x, y, MATERIAL.WATER);
+  if (waterIndex !== -1 && Math.random() < 0.08) {
+    setCell(waterIndex, MATERIAL.EMPTY);
+    setCell(i, MATERIAL.WET_WOOD);
+    updated[i] = 1;
+    return;
+  }
+}
+
+// Намокшее дерево активнее пускает ростки и постепенно высыхает без воды.
+function updateWetWood(x, y) {
+  const i = toIndex(x, y);
+  const nearWater = nearElement(x, y, MATERIAL.WATER);
+  if (!nearWater && Math.random() < 0.012) {
+    setCell(i, MATERIAL.WOOD);
+    updated[i] = 1;
+    return;
+  }
+
+  growSproutAbove(x, y, nearWater ? 0.012 : 0.004);
 }
 
 // Росток: статичный, медленно разрастается в крону (CANOPY) вверх и в стороны.
@@ -996,6 +1186,22 @@ function updateCell(x, y) {
     updateWood(x, y);
     return;
   }
+  if (t === MATERIAL.WET_WOOD) {
+    updateWetWood(x, y);
+    return;
+  }
+  if (t === MATERIAL.WET_SAND) {
+    updateWetSand(x, y);
+    return;
+  }
+  if (t === MATERIAL.HOT_SAND) {
+    updateHotSand(x, y);
+    return;
+  }
+  if (t === MATERIAL.GUNPOWDER) {
+    updateGunpowder(x, y);
+    return;
+  }
   if (t === MATERIAL.DIRT) {
     updateDirt(x, y);
     return;
@@ -1110,6 +1316,15 @@ function draw() {
         r = Math.min(255, 210 + randomBetween(0, 45));
         g = Math.floor(65 + heat * 140);
         b = Math.floor(20 + randomBetween(0, 25));
+      } else if (t === MATERIAL.HOT_SAND) {
+        const glow = life[i] / 70;
+        r = Math.min(255, 210 + Math.floor(glow * 45) + randomBetween(-6, 10));
+        g = Math.min(240, 110 + Math.floor(glow * 80) + randomBetween(-8, 8));
+        b = Math.max(40, 42 + Math.floor(glow * 35) + randomBetween(-6, 6));
+      } else if (t === MATERIAL.GLASS) {
+        r = 150 + randomBetween(0, 28);
+        g = 206 + randomBetween(0, 36);
+        b = 220 + randomBetween(0, 32);
       } else if (t === MATERIAL.SMOKE) {
         const fade = life[i] / 64;
         r = Math.floor(80 + fade * 70);
