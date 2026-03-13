@@ -138,7 +138,7 @@ const marioBigFrames = [
     "...BBBBBBBB.....",
     "..BBBBBBBBBB....",
     "..BBBYYBBBBB....",
-    "..BBBBBBBBBB....",
+    "..BBBBBBBBBBBB..",
     "..BBBBBBBBBB....",
     "...BBB..BBB.....",
     "...BBB..BBB.....",
@@ -164,7 +164,7 @@ const marioBigFrames = [
     "...BBBBBBBB.....",
     "..BBBBBBBBBB....",
     "..BBBYYBBBBB....",
-    "..BBBBBBBBBB....",
+    "..BBBBBBBBBBBB..",
     "..BBBBBBBBBB....",
     "...BBB..BBB.....",
     "...BBB..BBB.....",
@@ -194,7 +194,6 @@ const goombaSprite = [
   "...DD......DD...",
   "..DDD......DDD..",
   "................",
-  "................",
   "................"
 ];
 
@@ -210,7 +209,6 @@ const mushroomSprite = [
   "...SSSSSSSSSS...",
   "....SSSSSSSS....",
   ".....SSSSSS.....",
-  "................",
   "................",
   "................",
   "................",
@@ -244,6 +242,34 @@ const palettes = {
   mushroom: { R: "#d92525", W: "#f5efe3", S: "#ead1b7", B: "#6b3f18", ".": null },
   flower: { W: "#f5efe3", R: "#d92525", Y: "#f2c230", G: "#29a74a", ".": null }
 };
+
+const spriteImages = {
+  mario: new Image(),
+  goomba: new Image(),
+  mushroom: new Image(),
+  luckyBlock: new Image()
+};
+
+spriteImages.mario.src = "Mario.svg";
+spriteImages.goomba.src = "Goomba.svg";
+spriteImages.mushroom.src = "Mushroom.svg";
+spriteImages.luckyBlock.src = "luckyblock.svg";
+
+function drawImageSprite(img, x, y, w, h, flip = false) {
+  if (!img || !img.complete || img.naturalWidth === 0) return false;
+
+  if (flip) {
+    ctx.save();
+    ctx.translate(x + w, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, w, h);
+    ctx.restore();
+    return true;
+  }
+
+  ctx.drawImage(img, x, y, w, h);
+  return true;
+}
 
 function drawSprite(pattern, palette, x, y, pixelSize, flip = false) {
   for (let row = 0; row < pattern.length; row++) {
@@ -821,7 +847,7 @@ function updatePlayer() {
   player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
 
   if ((justPressed.ArrowUp || justPressed.Space) && player.onGround) {
-    player.vy = player.form === "small" ? -11.7 : -12.6;
+    player.vy = player.form === "small" ? -13.1 : -13.6;
     player.onGround = false;
   }
 
@@ -1173,24 +1199,85 @@ function drawBackground() {
     return;
   }
 
-  ctx.fillStyle = "#6ec0e8";
+  const skyGradient = ctx.createLinearGradient(0, 0, 0, H);
+  skyGradient.addColorStop(0, "#eefbff");
+  skyGradient.addColorStop(0.35, "#d7f1fb");
+  skyGradient.addColorStop(1, "#6ec0e8");
+  ctx.fillStyle = skyGradient;
   ctx.fillRect(0, 0, W, H);
+
+  const sunX = W - 170 - (game.cameraX * 0.08) % 120;
+  const sunY = H - 172;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 18, sunX, sunY, 150);
+  sunGlow.addColorStop(0, "rgba(255, 244, 182, 0.55)");
+  sunGlow.addColorStop(0.45, "rgba(255, 232, 150, 0.22)");
+  sunGlow.addColorStop(1, "rgba(255, 232, 150, 0)");
+  ctx.fillStyle = sunGlow;
+  ctx.fillRect(sunX - 150, sunY - 150, 300, 300);
+  ctx.fillStyle = "#ffe79a";
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 44, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff3c6";
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 28, 0, Math.PI * 2);
+  ctx.fill();
 
   for (let i = 0; i < 10; i++) {
     const x = ((i * 260 - game.cameraX * 0.2) % (W + 280)) - 140;
-    const y = 60 + (i % 3) * 34;
+    const y = 78 + (i % 3) * 34;
+    ctx.fillStyle = "#d9eef8";
+    ctx.fillRect(x + 8, y + 8, 176, 14);
+    ctx.fillRect(x + 24, y - 6, 136, 16);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x, y, 66, 20);
-    ctx.fillRect(x + 14, y - 12, 34, 12);
+    ctx.fillRect(x, y, 184, 18);
+    ctx.fillRect(x + 16, y - 14, 152, 16);
+    ctx.fillRect(x + 36, y - 28, 112, 14);
+    ctx.fillRect(x + 60, y - 40, 64, 12);
   }
 
-  for (let i = 0; i < 20; i++) {
-    const hillX = ((i * 210 - game.cameraX * 0.45) % (W + 300)) - 150;
-    const hillY = H - 120 - (i % 2) * 24;
-    ctx.fillStyle = i % 2 === 0 ? "#68bf4f" : "#58b449";
+  const farFieldTop = H - 132;
+  const nearFieldTop = H - 102;
+
+  ctx.fillStyle = "#7acc58";
+  ctx.fillRect(0, farFieldTop, W, H - farFieldTop);
+
+  for (let i = 0; i < 8; i++) {
+    const fieldX = ((i * 170 - game.cameraX * 0.18) % (W + 220)) - 110;
     ctx.beginPath();
-    ctx.ellipse(hillX, hillY, 90, 54, 0, 0, Math.PI * 2);
+    ctx.ellipse(fieldX, farFieldTop, 120, 30, 0, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  for (let i = 0; i < 40; i++) {
+    const flowerX = ((i * 31 + (i % 5) * 17 - game.cameraX * 0.18) % (W + 84)) - 32;
+    const flowerY = farFieldTop - 14 + ((i * 11) % 9) * 3;
+    ctx.fillStyle = i % 3 === 0 ? "#ff9fd1" : "#ffb15a";
+    ctx.fillRect(flowerX, flowerY, 4, 4);
+    ctx.fillStyle = "#f7d8ea";
+    ctx.fillRect(flowerX + 1, flowerY + 1, 2, 2);
+  }
+
+  ctx.fillStyle = "#5fbc45";
+  ctx.fillRect(0, nearFieldTop, W, H - nearFieldTop);
+
+  for (let i = 0; i < 7; i++) {
+    const fieldX = ((i * 190 - game.cameraX * 0.32) % (W + 260)) - 130;
+    ctx.beginPath();
+    ctx.ellipse(fieldX, nearFieldTop, 136, 34, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 52; i++) {
+    const flowerX = ((i * 27 + (i % 7) * 13 - game.cameraX * 0.32) % (W + 88)) - 26;
+    const flowerY = nearFieldTop - 18 + ((i * 7) % 11) * 4;
+    ctx.fillStyle = i % 3 === 0 ? "#ff93c8" : "#ff9b3d";
+    ctx.fillRect(flowerX, flowerY + 2, 3, 3);
+    ctx.fillRect(flowerX + 3, flowerY, 3, 3);
+    ctx.fillRect(flowerX + 6, flowerY + 2, 3, 3);
+    ctx.fillRect(flowerX + 3, flowerY + 4, 3, 3);
+    ctx.fillStyle = "#ffe7a9";
+    ctx.fillRect(flowerX + 3, flowerY + 2, 3, 3);
   }
 }
 
@@ -1210,12 +1297,22 @@ function drawGround() {
 
   const offset = -(game.cameraX % TILE);
   for (let x = offset - TILE; x < W + TILE; x += TILE) {
-    ctx.fillStyle = "#c87832";
+    ctx.fillStyle = "#9a5a2a";
     ctx.fillRect(x, world.floorY, TILE, H - world.floorY);
-    ctx.fillStyle = "#8f4a1f";
-    ctx.fillRect(x + 2, world.floorY + 2, TILE - 4, 6);
-    ctx.fillRect(x + 5, world.floorY + 14, 8, 6);
-    ctx.fillRect(x + 18, world.floorY + 16, 10, 6);
+    ctx.fillStyle = "#4fb44a";
+    ctx.fillRect(x, world.floorY, TILE, 6);
+    ctx.fillStyle = "#79d35f";
+    ctx.fillRect(x + 2, world.floorY + 1, 8, 3);
+    ctx.fillRect(x + 14, world.floorY + 1, 10, 3);
+    ctx.fillRect(x + 26, world.floorY + 1, 4, 3);
+    ctx.fillStyle = "#7a431f";
+    ctx.fillRect(x + 3, world.floorY + 9, 9, 6);
+    ctx.fillRect(x + 18, world.floorY + 12, 10, 6);
+    ctx.fillRect(x + 7, world.floorY + 22, 12, 7);
+    ctx.fillStyle = "#c98343";
+    ctx.fillRect(x + 14, world.floorY + 8, 3, 3);
+    ctx.fillRect(x + 24, world.floorY + 20, 4, 4);
+    ctx.fillRect(x + 4, world.floorY + 18, 3, 3);
   }
 }
 
@@ -1223,8 +1320,17 @@ function drawPlatform(p) {
   const sx = p.x - game.cameraX;
   ctx.fillStyle = "#66be4f";
   ctx.fillRect(sx, p.y, p.w, p.h);
+  ctx.fillStyle = "#8cdd72";
+  ctx.fillRect(sx + 2, p.y + 2, Math.max(6, p.w - 8), 4);
+  ctx.fillRect(sx + 4, p.y + 7, Math.max(4, p.w * 0.28), 3);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.fillRect(sx + 3, p.y + 3, Math.max(4, p.w * 0.18), 2);
+  ctx.fillStyle = "#58aa45";
+  ctx.fillRect(sx + 2, p.y + 10, Math.max(6, p.w - 8), Math.max(2, p.h - 14));
   ctx.fillStyle = "#489539";
   ctx.fillRect(sx, p.y + p.h - 4, p.w, 4);
+  ctx.fillStyle = "#34712c";
+  ctx.fillRect(sx + p.w - 4, p.y + 2, 4, Math.max(4, p.h - 2));
 }
 
 function drawBlock(b) {
@@ -1233,6 +1339,10 @@ function drawBlock(b) {
   const x = b.x - game.cameraX;
 
   if (b.type === "question" && !b.used) {
+    if (drawImageSprite(spriteImages.luckyBlock, x, b.y, TILE, TILE)) {
+      return;
+    }
+
     ctx.fillStyle = "#ffb03b";
     ctx.fillRect(x, b.y, TILE, TILE);
     ctx.fillStyle = "#d78221";
@@ -1254,10 +1364,22 @@ function drawPipe(p) {
   const x = p.x - game.cameraX;
   ctx.fillStyle = "#1faa48";
   ctx.fillRect(x, p.y, p.w, p.h);
+  ctx.fillStyle = "#54e07a";
+  ctx.fillRect(x + 4, p.y + 4, 6, p.h - 8);
+  ctx.fillStyle = "#2ec45d";
+  ctx.fillRect(x + 12, p.y + 4, Math.max(8, p.w - 24), p.h - 8);
   ctx.fillStyle = "#35d464";
   ctx.fillRect(x - 6, p.y - 10, p.w + 12, 12);
+  ctx.fillStyle = "#7cf09d";
+  ctx.fillRect(x - 2, p.y - 8, Math.max(12, p.w * 0.45), 4);
+  ctx.fillRect(x + 2, p.y - 4, Math.max(10, p.w * 0.3), 3);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+  ctx.fillRect(x + 4, p.y - 7, 10, 2);
   ctx.fillStyle = "#137531";
   ctx.fillRect(x + p.w - 6, p.y, 6, p.h);
+  ctx.fillStyle = "#0d5f26";
+  ctx.fillRect(x + p.w - 12, p.y + 3, 6, p.h - 3);
+  ctx.fillRect(x + p.w - 8, p.y - 10, 8, 12);
 }
 
 function drawCoin(c) {
@@ -1273,12 +1395,22 @@ function drawCoin(c) {
 
 function drawEnemy(e) {
   if (e.dead) return;
+
+  if (drawImageSprite(spriteImages.goomba, e.x - game.cameraX, e.y, e.w, e.h, e.vx > 0)) {
+    return;
+  }
+
   drawSprite(goombaSprite, palettes.goomba, e.x - game.cameraX, e.y - 2, 2, e.vx > 0);
 }
 
 function drawPowerUp(p) {
   if (!p.active) return;
+
   if (p.type === "mushroom") {
+    if (drawImageSprite(spriteImages.mushroom, p.x - game.cameraX, p.y, p.w, p.h)) {
+      return;
+    }
+
     drawSprite(mushroomSprite, palettes.mushroom, p.x - game.cameraX - 4, p.y - 4, 2);
   } else {
     drawSprite(flowerSprite, palettes.flower, p.x - game.cameraX - 4, p.y - 4, 2);
@@ -1315,29 +1447,77 @@ function drawFlag() {
 
 function drawCastle() {
   const x = world.flag.x - game.cameraX + TILE * 2;
-  const y = world.floorY - 132;
+  const y = world.floorY - 148;
 
-  ctx.fillStyle = "#a66b3c";
-  ctx.fillRect(x, y, 132, 132);
+  ctx.fillStyle = "#7c4725";
+  ctx.fillRect(x - 6, y + 136, 144, 12);
 
-  ctx.fillStyle = "#8a542d";
-  for (let row = 0; row < 7; row++) {
+  ctx.fillStyle = "#b97842";
+  ctx.fillRect(x, y + 18, 132, 118);
+
+  ctx.fillStyle = "#cf9057";
+  ctx.fillRect(x + 10, y + 28, 112, 96);
+
+  ctx.fillStyle = "#8f552d";
+  for (let row = 0; row < 6; row++) {
     for (let col = 0; col < 8; col++) {
-      ctx.fillRect(x + 6 + col * 16 + ((row % 2) ? 8 : 0), y + 8 + row * 16, 10, 8);
+      ctx.fillRect(x + 8 + col * 14 + ((row % 2) ? 7 : 0), y + 24 + row * 16, 10, 8);
     }
   }
 
-  ctx.fillStyle = "#6c3f21";
-  ctx.fillRect(x + 48, y + 76, 34, 56);
-  ctx.fillStyle = "#1f1f1f";
-  ctx.fillRect(x + 56, y + 88, 18, 44);
+  ctx.fillStyle = "#a66535";
+  ctx.fillRect(x + 18, y, 16, 18);
+  ctx.fillRect(x + 42, y, 16, 18);
+  ctx.fillRect(x + 66, y, 16, 18);
+  ctx.fillRect(x + 90, y, 16, 18);
+  ctx.fillRect(x + 114, y, 16, 18);
 
-  ctx.fillStyle = "#a66b3c";
-  ctx.fillRect(x + 18, y - 28, 24, 28);
-  ctx.fillRect(x + 90, y - 28, 24, 28);
-  ctx.fillStyle = "#8a542d";
-  ctx.fillRect(x + 24, y - 20, 12, 8);
-  ctx.fillRect(x + 96, y - 20, 12, 8);
+  ctx.fillStyle = "#b97842";
+  ctx.fillRect(x + 10, y - 18, 30, 36);
+  ctx.fillRect(x + 92, y - 18, 30, 36);
+
+  ctx.fillStyle = "#cf9057";
+  ctx.fillRect(x + 14, y - 14, 22, 28);
+  ctx.fillRect(x + 96, y - 14, 22, 28);
+
+  ctx.fillStyle = "#a66535";
+  ctx.fillRect(x + 12, y - 30, 10, 12);
+  ctx.fillRect(x + 26, y - 30, 10, 12);
+  ctx.fillRect(x + 94, y - 30, 10, 12);
+  ctx.fillRect(x + 108, y - 30, 10, 12);
+
+  ctx.fillStyle = "#7a4423";
+  ctx.fillRect(x + 18, y - 38, 14, 8);
+  ctx.fillRect(x + 100, y - 38, 14, 8);
+
+  ctx.fillStyle = "#5d3419";
+  ctx.fillRect(x + 50, y + 82, 32, 54);
+  ctx.beginPath();
+  ctx.arc(x + 66, y + 82, 16, Math.PI, 0);
+  ctx.fill();
+
+  ctx.fillStyle = "#1c120d";
+  ctx.fillRect(x + 56, y + 94, 20, 42);
+
+  ctx.fillStyle = "#4f2d17";
+  ctx.fillRect(x + 22, y + 62, 14, 22);
+  ctx.fillRect(x + 96, y + 62, 14, 22);
+  ctx.fillRect(x + 59, y + 42, 14, 18);
+
+  ctx.fillStyle = "#d8b07a";
+  ctx.fillRect(x + 25, y + 66, 8, 14);
+  ctx.fillRect(x + 99, y + 66, 8, 14);
+  ctx.fillRect(x + 62, y + 45, 8, 10);
+
+  ctx.fillStyle = "#f1d9a7";
+  ctx.fillRect(x + 62, y + 102, 3, 26);
+  ctx.fillRect(x + 68, y + 102, 3, 26);
+
+  ctx.fillStyle = "#d84b3c";
+  ctx.fillRect(x + 27, y - 50, 12, 6);
+  ctx.fillRect(x + 109, y - 50, 12, 6);
+  ctx.fillRect(x + 38, y - 50, 2, 14);
+  ctx.fillRect(x + 120, y - 50, 2, 14);
 }
 
 function drawMario() {
@@ -1347,6 +1527,10 @@ function drawMario() {
   const y = player.y - (player.form === "small" ? 2 : 0);
   const frame = Math.floor(player.animPhase) % 2;
   const flip = player.facing < 0;
+
+  if (drawImageSprite(spriteImages.mario, x, y, player.w + 4, player.h + 2, flip)) {
+    return;
+  }
 
   if (player.form === "small") {
     drawSprite(marioSmallFrames[frame], palettes.marioSmall, x, y, 2, flip);
