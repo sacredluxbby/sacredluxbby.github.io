@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Puzzle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="control-panel">
+            <p class="eyebrow">Puzzle studio</p>
+            <h1 id="app-title">Pixel Puzzle</h1>
+            <p class="panel-copy">Lae pilt üles või tee foto kaamerast, vali raskus ja kuju ning pane pusle kokku.</p>
+
+            <div class="control-stack">
+                <label class="button" for="photo-input">Lae foto</label>
+                <input id="photo-input" type="file" accept="image/*">
+
+                <button id="camera-button" class="button secondary" type="button">Kaamera</button>
+
+                <div class="field-group two-column">
+                    <label>
+                        <span>Raskusaste</span>
+                        <select id="difficulty-select">
+                            <option value="3">3x3</option>
+                            <option value="5" selected>5x5</option>
+                            <option value="10">10x10</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Kuju</span>
+                        <select id="shape-select">
+                            <option value="square">Ruudud</option>
+                            <option value="triangle">Kolmnurgad</option>
+                            <option value="polygon">Juhuslikud hulknurgad</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="action-row">
+                    <button id="ghost-button" class="button tertiary" type="button">Vaata</button>
+                    <button id="cut-button" class="button secondary" type="button" disabled>Lõika pusleks</button>
+                </div>
+
+                <label>
+                    <span>Taustamuusika</span>
+                    <select id="music-select">
+                        <option value="off">Väljas</option>
+                        <option value="pulse">Pulse</option>
+                        <option value="arcade">Arcade</option>
+                        <option value="drift">Drift</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Mängija nimi</span>
+                    <input id="player-name" type="text" maxlength="24" placeholder="Sisesta nimi">
+                </label>
+            </div>
+
+            <div class="status-card compact-card">
+                <p class="status-label">Aeg</p>
+                <p id="timer-text" class="large-value">00:00.0</p>
+            </div>
+
+            <div class="status-card">
+                <p class="status-label">Olek</p>
+                <p id="status-text">Lae pilt üles, et alustada.</p>
+            </div>
+
+            <div class="status-card leaderboard-card">
+                <div class="leaderboard-head">
+                    <div>
+                        <p class="status-label">Liidrite tabel</p>
+                        <p class="leaderboard-note">Salvestatakse brauseris ja eksporditakse JSON-failina.</p>
+                    </div>
+                    <button id="export-button" class="mini-button" type="button">JSON</button>
+                </div>
+                <ol id="leaderboard-list" class="leaderboard-list"></ol>
+            </div>
+        </aside>
+
+        <main class="workspace">
+            <section class="board-section panel">
+                <div class="panel-heading">
+                    <h2>Kokkupaneku ala</h2>
+                    <span id="grid-label">5 x 5</span>
+                </div>
+                <div class="board-frame">
+                    <div id="assembly-board" class="assembly-board" aria-label="Assembly field">
+                        <canvas id="ghost-canvas" class="ghost-canvas" width="400" height="400" aria-hidden="true"></canvas>
+                        <canvas id="fireworks-canvas" class="fireworks-canvas" width="400" height="400" aria-hidden="true"></canvas>
+                        <div id="board-empty-state" class="board-empty-state">Pusletükid ilmuvad siia pärast lõikamist.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="preview-section panel">
+                <div class="panel-heading">
+                    <h2>Originaalpilt</h2>
+                    <span>400 x 400</span>
+                </div>
+                <div id="preview-drop-zone" class="preview-frame" tabindex="0">
+                    <canvas id="preview-canvas" width="400" height="400" aria-label="Original image preview"></canvas>
+                    <div id="preview-placeholder" class="preview-placeholder">Üleslaetud pilt kuvatakse siia. Pildi saab ka siia lohistada või Ctrl+V abil kleepida.</div>
+                </div>
+            </section>
+
+            <section class="storage-section panel">
+                <div class="panel-heading">
+                    <h2>Ladu</h2>
+                    <span id="storage-count">0 tükki</span>
+                </div>
+                <div id="storage-zone" class="storage-zone" aria-label="Storage area"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="camera-modal" class="camera-modal hidden" aria-hidden="true">
+        <div class="camera-panel">
+            <div class="panel-heading camera-heading">
+                <h2>Kaamera</h2>
+                <button id="close-camera-button" class="mini-button" type="button">Sulge</button>
+            </div>
+            <video id="camera-video" autoplay muted></video>
+            <canvas id="camera-canvas" width="400" height="400" hidden></canvas>
+            <div class="camera-actions">
+                <button id="capture-button" class="button" type="button">Tee foto</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

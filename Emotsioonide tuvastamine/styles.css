@@ -1,0 +1,303 @@
+:root {
+  --text: #fef9ef;
+  --card: rgba(16, 25, 42, 0.68);
+  --card-border: rgba(255, 255, 255, 0.2);
+  --shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+  --happy-a: #ff9f1c;
+  --happy-b: #ffbf69;
+  --sad-a: #264653;
+  --sad-b: #457b9d;
+  --neutral-a: #566270;
+  --neutral-b: #a9b0bd;
+  --angry-a: #7f1d1d;
+  --angry-b: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at 10% 20%, var(--neutral-b), transparent 40%),
+    linear-gradient(160deg, var(--neutral-a), #0f172a 70%);
+  transition: background 500ms ease;
+  overflow-x: hidden;
+}
+
+body[data-emotion="happy"] {
+  background: radial-gradient(circle at 10% 20%, var(--happy-b), transparent 40%),
+    linear-gradient(160deg, var(--happy-a), #f66b0e 70%);
+}
+
+body[data-emotion="sad"] {
+  background: radial-gradient(circle at 10% 20%, #7dd3fc, transparent 40%),
+    linear-gradient(160deg, var(--sad-a), var(--sad-b) 70%);
+}
+
+body[data-emotion="neutral"] {
+  background: radial-gradient(circle at 10% 20%, var(--neutral-b), transparent 40%),
+    linear-gradient(160deg, var(--neutral-a), #0f172a 70%);
+}
+
+body[data-emotion="angry"] {
+  background: radial-gradient(circle at 10% 20%, #fb7185, transparent 40%),
+    linear-gradient(160deg, var(--angry-a), var(--angry-b) 70%);
+}
+
+body.pulse-on::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  background: conic-gradient(from 180deg, rgba(255, 255, 255, 0.08), transparent 45%, rgba(255, 255, 255, 0.08));
+  mix-blend-mode: soft-light;
+  animation: pulse 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.52;
+  }
+}
+
+.ambient-shape {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-shape-a {
+  width: 240px;
+  height: 240px;
+  left: -70px;
+  top: 70px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ambient-shape-b {
+  width: 280px;
+  height: 280px;
+  right: -120px;
+  bottom: 20px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.app-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  letter-spacing: 0.02em;
+}
+
+.hero p {
+  margin: 0 0 16px;
+  max-width: 72ch;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #111827;
+  color: #f9fafb;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-alt {
+  background: #334155;
+}
+
+.status {
+  font-family: "Space Mono", monospace;
+  background: rgba(0, 0, 0, 0.32);
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.stage-card,
+.controls-card {
+  margin-top: 20px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.stage {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  aspect-ratio: 16 / 9;
+  background: #020617;
+}
+
+#video,
+#overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#video {
+  object-fit: cover;
+}
+
+#figmaSticker {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  display: none;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.35));
+}
+
+.emotion-output {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.label {
+  display: block;
+  opacity: 0.85;
+  font-size: 0.92rem;
+}
+
+#emotionName {
+  font-size: 1.4rem;
+}
+
+.confidence-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meter {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+#confidenceBar {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #86efac, #22c55e);
+}
+
+.grid-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.control-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.figma-panel,
+.history-wrap {
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.figma-panel h3,
+.history-wrap h3 {
+  margin-top: 0;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.upload-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#historyList {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.snapshot-tools {
+  margin-top: 12px;
+}
+
+.snapshots {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.snapshots img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  #figmaSticker {
+    width: 66px;
+    height: 66px;
+  }
+}
