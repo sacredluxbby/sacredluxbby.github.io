@@ -6,12 +6,13 @@
   <title>Emotsioonipeegel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-emotion="neutral" class="pulse-on">
   <div class="ambient-shape ambient-shape-a"></div>
   <div class="ambient-shape ambient-shape-b"></div>
+  <div id="fallLayer" class="fall-layer" aria-hidden="true"></div>
 
   <main class="app-shell">
     <section class="hero">
@@ -27,7 +28,6 @@
       <div class="stage" id="stage">
         <video id="video" autoplay playsinline muted></video>
         <canvas id="overlay"></canvas>
-        <img id="figmaSticker" alt="Figma emotsioon" />
       </div>
       <div class="emotion-output">
         <div>
@@ -35,9 +35,10 @@
           <strong id="emotionName">Neutraalne</strong>
         </div>
         <div id="confidenceWrap" class="confidence-wrap">
-          <span class="label">Kindlus</span>
+          <span class="label">Tuju</span>
           <div class="meter"><span id="confidenceBar"></span></div>
-          <small id="confidenceText">0%</small>
+          <div class="scale-labels"><small>Kurjast</small><small>Lahke</small></div>
+          <small id="confidenceText">Neutraalne</small>
         </div>
       </div>
     </section>
@@ -46,36 +47,25 @@
       <h2>Lisavalikud (5 tk)</h2>
       <div class="grid-controls">
         <label class="control-item">
-          <input type="checkbox" id="optFigma" checked />
-          <span>1) Figma emotsioonikleebised näo kõrval</span>
+          <input type="checkbox" id="optMirror" checked />
+          <span>1) Peegelvaade kaameral</span>
         </label>
         <label class="control-item">
           <input type="checkbox" id="optConfidence" checked />
-          <span>2) Kindluse protsendiriba</span>
+          <span>2) Tujuskaala (kuri -> lahke)</span>
         </label>
         <label class="control-item">
           <input type="checkbox" id="optHistory" checked />
           <span>3) Viimase 10 tuvastuse ajalugu</span>
         </label>
         <label class="control-item">
-          <input type="checkbox" id="optPulse" checked />
-          <span>4) Emotsioonipõhine pulseeriv taust</span>
+          <input type="checkbox" id="optSnapshot" checked />
+          <span>4) Snapshot (nupp)</span>
         </label>
         <label class="control-item">
-          <input type="checkbox" id="optSnapshot" checked />
+          <input type="checkbox" id="optGallery" checked />
           <span>5) Snapshot-galerii</span>
         </label>
-      </div>
-
-      <div id="figmaPanel" class="figma-panel">
-        <h3>Figma kleepsud</h3>
-        <p>Joonista Figmas 4 emotsiooni (rõõm, kurbus, neutraalne, viha), ekspordi PNG ja lae siia.</p>
-        <div class="upload-grid">
-          <label>Rõõm <input type="file" id="uploadHappy" accept="image/*" /></label>
-          <label>Kurbus <input type="file" id="uploadSad" accept="image/*" /></label>
-          <label>Neutraalne <input type="file" id="uploadNeutral" accept="image/*" /></label>
-          <label>Viha <input type="file" id="uploadAngry" accept="image/*" /></label>
-        </div>
       </div>
 
       <div id="historyWrap" class="history-wrap">
@@ -83,10 +73,13 @@
         <ul id="historyList"></ul>
       </div>
 
-      <div class="snapshot-tools">
+      <div id="snapshotTools" class="snapshot-tools">
         <button id="snapBtn" class="btn btn-alt">Tee snapshot</button>
       </div>
-      <div id="snapshots" class="snapshots"></div>
+      <div id="snapshotWrap" class="snapshot-wrap">
+        <h3>Snapshotid</h3>
+        <div id="snapshots" class="snapshots"></div>
+      </div>
     </section>
   </main>
 
