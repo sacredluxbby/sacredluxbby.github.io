@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Карточки с котиками</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="topbar">
+        <label for="langSelect" id="langLabel">Язык</label>
+        <select id="langSelect" class="lang-select">
+          <option value="ru">RU</option>
+          <option value="en">EN</option>
+          <option value="et">ET</option>
+        </select>
+      </section>
+
+      <section class="hero">
+        <p class="hero-kicker" id="heroKicker">Веб-приложение</p>
+        <h1 id="heroTitle">Карточки с котиками из внешнего API</h1>
+        <p class="hero-subtitle" id="heroSubtitle">
+          Приложение загружает случайных кошек из TheCatAPI и показывает картинку,
+          породу, страну и описание.
+        </p>
+        <button id="reloadButton" class="primary-btn">Загрузить новых кошек</button>
+      </section>
+
+      <section class="controls">
+        <div class="control-group">
+          <label for="breedSearch" id="searchLabel">Поиск по породе</label>
+          <input id="breedSearch" type="text" placeholder="Введите название породы" />
+        </div>
+        <div class="control-group">
+          <label for="breedSelect" id="breedLabel">Порода</label>
+          <select id="breedSelect">
+            <option value="">Все породы</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="countrySelect" id="countryLabel">Страна</label>
+          <select id="countrySelect">
+            <option value="">Все страны</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="sortSelect" id="sortLabel">Сортировка</label>
+          <select id="sortSelect">
+            <option value="breed">От А до Я (порода)</option>
+            <option value="country">От А до Я (страна)</option>
+          </select>
+        </div>
+
+        <div class="toggle-row">
+          <button class="chip-btn" id="favoritesToggle" type="button">Только избранные: Выкл</button>
+          <button class="chip-btn" id="viewToggle" type="button">Вид: Сетка</button>
+          <button class="chip-btn" id="themeToggle" type="button">Тема: Светлая</button>
+          <button class="chip-btn" id="autoToggle" type="button">Автообновление: Выкл</button>
+          <button class="chip-btn" id="surpriseButton" type="button">Удиви меня</button>
+        </div>
+
+        <p class="panel-summary" id="panelSummary">Загружено: 0 | Видно: 0 | Избранных: 0</p>
+      </section>
+
+      <p class="stats" id="statsText">Загрузка...</p>
+
+      <section id="cardsGrid" class="cards-grid" aria-live="polite"></section>
+    </main>
+
+    <template id="catCardTemplate">
+      <article class="cat-card">
+        <img class="cat-image" alt="Котик" loading="lazy" />
+        <div class="cat-content">
+          <div class="cat-title-row">
+            <h2 class="cat-breed"></h2>
+            <button type="button" class="fav-btn" aria-label="Избранное">☆</button>
+          </div>
+          <p><strong>Страна:</strong> <span class="cat-country"></span></p>
+          <p><strong>Характер:</strong> <span class="cat-temperament"></span></p>
+          <p class="cat-description"></p>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
