@@ -272,7 +272,18 @@ select {
   width: 100%;
   height: 220px;
   object-fit: cover;
+  object-position: center;
   background: #21131e;
+}
+
+.cat-image[data-drawn="true"] {
+  object-fit: contain;
+  padding: 10px;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.92), rgba(255, 214, 235, 0.72));
+}
+
+body.theme-dark .cat-image[data-drawn="true"] {
+  background: radial-gradient(circle at center, rgba(65, 40, 63, 0.96), rgba(24, 13, 24, 0.95));
 }
 
 .cat-content {

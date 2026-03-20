@@ -20,6 +20,8 @@ const autoToggle = document.getElementById("autoToggle");
 const surpriseButton = document.getElementById("surpriseButton");
 const template = document.getElementById("catCardTemplate");
 
+const drawnCatImages = ["cat%201.svg", "cat%202.svg", "cat%203.svg", "cat%204.svg", "cat%205.svg"];
+
 const dict = {
   ru: {
     lang: "Язык",
@@ -222,6 +224,13 @@ function updateSummary() {
   statsText.textContent = `${t("loadedCards")}: ${state.visibleCards.length}`;
 }
 
+function getRandomDrawnCatImage(excludeSrc = "") {
+  const normalizedExclude = excludeSrc.split("/").pop() || "";
+  const candidates = drawnCatImages.filter((imageName) => imageName !== normalizedExclude);
+  const pool = candidates.length ? candidates : drawnCatImages;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function renderCards(cards) {
   cardsGrid.innerHTML = "";
   cardsGrid.classList.toggle("list-view", state.view === "list");
@@ -239,6 +248,7 @@ function renderCards(cards) {
     const favBtn = node.querySelector(".fav-btn");
 
     image.src = card.imageUrl;
+    image.dataset.originalSrc = card.imageUrl;
     image.alt = `${t("breedPrefix")}: ${card.breed}`;
     node.querySelector(".cat-breed").textContent = `${t("breedPrefix")}: ${card.breed}`;
     const countryLabelNode = node.querySelector(".cat-country")?.closest("p")?.querySelector("strong");
@@ -472,6 +482,60 @@ cardsGrid.addEventListener("click", (event) => {
   if (cardId) {
     toggleFavorite(cardId);
   }
+});
+
+cardsGrid.addEventListener("mouseover", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const card = target.closest(".cat-card");
+  if (!card || !(card instanceof HTMLElement)) {
+    return;
+  }
+
+  const related = event.relatedTarget;
+  if (related instanceof Node && card.contains(related)) {
+    return;
+  }
+
+  const image = card.querySelector(".cat-image");
+  if (!(image instanceof HTMLImageElement)) {
+    return;
+  }
+
+  const randomImage = getRandomDrawnCatImage(image.src);
+  image.src = randomImage;
+  image.dataset.drawn = "true";
+});
+
+cardsGrid.addEventListener("mouseout", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const card = target.closest(".cat-card");
+  if (!card || !(card instanceof HTMLElement)) {
+    return;
+  }
+
+  const related = event.relatedTarget;
+  if (related instanceof Node && card.contains(related)) {
+    return;
+  }
+
+  const image = card.querySelector(".cat-image");
+  if (!(image instanceof HTMLImageElement)) {
+    return;
+  }
+
+  if (image.dataset.originalSrc) {
+    image.src = image.dataset.originalSrc;
+  }
+
+  delete image.dataset.drawn;
 });
 
 document.addEventListener("DOMContentLoaded", () => {
