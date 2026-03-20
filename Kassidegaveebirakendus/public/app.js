@@ -1,7 +1,6 @@
 const cardsGrid = document.getElementById("cardsGrid");
 const statsText = document.getElementById("statsText");
 const breedSearch = document.getElementById("breedSearch");
-const breedSelect = document.getElementById("breedSelect");
 const countrySelect = document.getElementById("countrySelect");
 const sortSelect = document.getElementById("sortSelect");
 const reloadButton = document.getElementById("reloadButton");
@@ -11,7 +10,6 @@ const heroKicker = document.getElementById("heroKicker");
 const heroTitle = document.getElementById("heroTitle");
 const heroSubtitle = document.getElementById("heroSubtitle");
 const searchLabel = document.getElementById("searchLabel");
-const breedLabel = document.getElementById("breedLabel");
 const countryLabel = document.getElementById("countryLabel");
 const sortLabel = document.getElementById("sortLabel");
 const panelSummary = document.getElementById("panelSummary");
@@ -192,21 +190,16 @@ function renderCountries(countryList) {
   }
 }
 
-function renderBreeds(breedList) {
-  const selected = breedSelect.value;
-  const breeds = [...new Set(breedList.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+function renderBreedSuggestions(breedList) {
+  const breedListElement = document.getElementById("breedList");
+  breedListElement.innerHTML = "";
 
-  breedSelect.innerHTML = `<option value="">${t("allBreeds")}</option>`;
+  const breeds = [...new Set(breedList.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
   for (const breed of breeds) {
     const option = document.createElement("option");
     option.value = breed;
-    option.textContent = breed;
-    breedSelect.append(option);
-  }
-
-  if (breeds.includes(selected)) {
-    breedSelect.value = selected;
+    breedListElement.append(option);
   }
 }
 
@@ -220,7 +213,7 @@ function updateToggleLabels() {
 
   favoritesToggle.classList.toggle("active", state.onlyFavorites);
   viewToggle.classList.toggle("active", state.view === "list");
-  themeToggle.classList.toggle("active", state.theme === "cool");
+  themeToggle.classList.toggle("active", state.theme === "dark");
   autoToggle.classList.toggle("active", state.autoRefresh);
 }
 
@@ -271,27 +264,45 @@ function renderCards(cards) {
   cardsGrid.append(fragment);
 }
 
-function applyFiltersAndRender() {
+function byText(text) {
+  return text ? String(text).trim() : "";
+}
+
+function getVisibleCards() {
   const q = breedSearch.value.trim().toLowerCase();
-  const selectedBreed = breedSelect.value;
   const selectedCountry = countrySelect.value;
   const sort = sortSelect.value;
 
-  let filtered = state.cards.filter((card) => {
-    const breedMatches = q ? card.breed.toLowerCase().includes(q) : true;
-    const exactBreedMatches = selectedBreed ? card.breed === selectedBreed : true;
-    const countryMatches = selectedCountry ? card.country === selectedCountry : true;
+  const filtered = state.cards.filter((card) => {
+    const breedText = byText(card.breed);
+    const countryText = byText(card.country);
+
+    const breedMatches = q ? breedText.toLowerCase().includes(q) : true;
+    const countryMatches = selectedCountry ? countryText === selectedCountry : true;
     const favoriteMatches = state.onlyFavorites ? state.favorites.has(card.id) : true;
-    return breedMatches && exactBreedMatches && countryMatches && favoriteMatches;
+
+    return breedMatches && countryMatches && favoriteMatches;
   });
 
   if (sort === "breed") {
-    filtered = filtered.sort((a, b) => a.breed.localeCompare(b.breed));
-  } else if (sort === "country") {
-    filtered = filtered.sort((a, b) => a.country.localeCompare(b.country));
+    return [...filtered].sort((a, b) => {
+      const breedCompare = byText(a.breed).localeCompare(byText(b.breed));
+      return breedCompare || byText(a.country).localeCompare(byText(b.country));
+    });
   }
 
-  state.visibleCards = filtered;
+  if (sort === "country") {
+    return [...filtered].sort((a, b) => {
+      const countryCompare = byText(a.country).localeCompare(byText(b.country));
+      return countryCompare || byText(a.breed).localeCompare(byText(b.breed));
+    });
+  }
+
+  return filtered;
+}
+
+function applyFiltersAndRender() {
+  state.visibleCards = getVisibleCards();
   renderCards(state.visibleCards);
   updateSummary();
   updateToggleLabels();
@@ -306,7 +317,6 @@ function updateLanguageTexts() {
   reloadButton.textContent = t("reload");
   searchLabel.textContent = t("searchLabel");
   breedSearch.placeholder = t("searchPlaceholder");
-  breedLabel.textContent = t("breedLabel");
   countryLabel.textContent = t("countryLabel");
   sortLabel.textContent = t("sortLabel");
 
@@ -359,9 +369,9 @@ async function loadCats() {
     const payload = await response.json();
     state.cards = payload.cards;
     state.countries = payload.countries || state.cards.map((card) => card.country);
-    state.breeds = payload.breeds || state.cards.map((card) => card.breed);
+    state.breeds = state.cards.map((card) => card.breed);
 
-    renderBreeds(state.breeds);
+    renderBreedSuggestions(state.breeds);
     renderCountries(state.countries);
     applyFiltersAndRender();
   } catch (error) {
@@ -410,7 +420,6 @@ function initializeUI() {
 const debouncedApplyFilters = debounce(applyFiltersAndRender, 250);
 
 breedSearch.addEventListener("input", debouncedApplyFilters);
-breedSelect.addEventListener("change", applyFiltersAndRender);
 countrySelect.addEventListener("change", applyFiltersAndRender);
 sortSelect.addEventListener("change", applyFiltersAndRender);
 reloadButton.addEventListener("click", loadCats);
@@ -444,7 +453,6 @@ langSelect.addEventListener("change", () => {
   state.language = langSelect.value;
   localStorage.setItem("catLanguage", state.language);
   updateLanguageTexts();
-  renderBreeds(state.breeds);
   renderCountries(state.countries);
   applyFiltersAndRender();
 });

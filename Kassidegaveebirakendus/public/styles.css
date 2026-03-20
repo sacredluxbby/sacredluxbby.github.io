@@ -8,7 +8,7 @@
   --card-bg: rgba(255, 255, 255, 0.88);
   --border: rgba(12, 10, 14, 0.34);
   --shadow: 0 18px 40px rgba(8, 6, 10, 0.26);
-  --paw-color: rgba(0, 0, 0, 0.66);
+  --paw-image: url("cat%20paw%20black.svg");
 }
 
 body.theme-dark {
@@ -21,7 +21,7 @@ body.theme-dark {
   --card-bg: rgba(22, 16, 23, 0.96);
   --border: rgba(255, 96, 180, 0.38);
   --shadow: 0 18px 46px rgba(0, 0, 0, 0.62);
-  --paw-color: rgba(255, 90, 176, 0.9);
+  --paw-image: url("cat%20paw%20pink.svg");
 }
 
 * {
@@ -31,7 +31,9 @@ body.theme-dark {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Manrope", sans-serif;
+  font-family: "Playfair Display", serif;
+  font-size: 16px;
+  line-height: 1.45;
   color: var(--text-main);
   background:
     radial-gradient(circle at 0% 100%, rgba(255, 80, 168, 0.35), transparent 30%),
@@ -43,14 +45,14 @@ body::before,
 body::after {
   content: "";
   position: fixed;
-  width: 190px;
-  height: 190px;
+  width: 300px;
+  height: 300px;
   pointer-events: none;
-  opacity: 0.2;
-  background:
-    radial-gradient(circle at 35% 30%, var(--paw-color) 0 16px, transparent 17px),
-    radial-gradient(circle at 65% 30%, var(--paw-color) 0 16px, transparent 17px),
-    radial-gradient(circle at 50% 55%, var(--paw-color) 0 30px, transparent 31px);
+  opacity: 0.18;
+  background-image: var(--paw-image);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
 
 body::before {
@@ -61,6 +63,7 @@ body::before {
 body::after {
   left: 10px;
   bottom: 12px;
+  transform: rotate(-22deg);
 }
 
 .page {
@@ -100,15 +103,23 @@ body::after {
 
 h1 {
   margin: 12px 0 10px;
+  font-family: "Playfair Display", serif;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   font-size: clamp(2rem, 5vw, 3.1rem);
-  line-height: 1.15;
+  line-height: 1.1;
+}
+
+button {
+  font-family: inherit;
 }
 
 .hero-subtitle {
   width: min(760px, 95%);
   margin: 0 auto;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
 .primary-btn {
@@ -220,7 +231,7 @@ select {
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .cards-grid.list-view {
@@ -229,26 +240,44 @@ select {
 
 .cards-grid.list-view .cat-card {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: minmax(250px, 320px) 1fr;
 }
 
 .cat-card {
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 24px;
   overflow: hidden;
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14));
+  -webkit-backdrop-filter: blur(10px) saturate(135%);
+  backdrop-filter: blur(10px) saturate(135%);
+  box-shadow: 0 16px 36px rgba(8, 6, 10, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 44px rgba(8, 6, 10, 0.24);
+}
+
+.cat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 38%);
 }
 
 .cat-image {
   width: 100%;
-  height: 230px;
+  height: 220px;
   object-fit: cover;
   background: #21131e;
 }
 
 .cat-content {
-  padding: 12px;
+  position: relative;
+  padding: 16px 16px 18px;
 }
 
 .cat-title-row {
@@ -260,22 +289,42 @@ select {
 
 .cat-content h2 {
   margin: 0 0 8px;
-  font-size: 1.28rem;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 1.36rem;
+  letter-spacing: 0.012em;
+  line-height: 1.2;
 }
 
 .fav-btn {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.52);
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.46);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   cursor: pointer;
   font-size: 1.1rem;
 }
 
 .fav-btn.active {
   color: #ff2e93;
-  border-color: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+body.theme-dark .cat-card {
+  border-color: rgba(255, 187, 225, 0.42);
+  background: linear-gradient(145deg, rgba(53, 36, 53, 0.55), rgba(18, 11, 18, 0.44));
+}
+
+body.theme-dark .cat-card::before {
+  background: linear-gradient(180deg, rgba(255, 191, 231, 0.16), transparent 38%);
+}
+
+body.theme-dark .fav-btn {
+  border-color: rgba(255, 187, 225, 0.46);
+  background: rgba(43, 25, 43, 0.45);
 }
 
 .cat-card.surprise {
@@ -296,14 +345,16 @@ select {
 }
 
 .cat-content p {
-  margin: 7px 0;
+  margin: 8px 0;
+  font-size: 0.98rem;
   color: var(--text-muted);
 }
 
 .cat-description {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid var(--border);
+  line-height: 1.45;
 }
 
 .empty-state {

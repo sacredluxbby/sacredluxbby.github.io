@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Playfair+Display:wght@700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -36,13 +36,8 @@
       <section class="controls">
         <div class="control-group">
           <label for="breedSearch" id="searchLabel">Поиск по породе</label>
-          <input id="breedSearch" type="text" placeholder="Введите название породы" />
-        </div>
-        <div class="control-group">
-          <label for="breedSelect" id="breedLabel">Порода</label>
-          <select id="breedSelect">
-            <option value="">Все породы</option>
-          </select>
+          <input id="breedSearch" type="text" placeholder="Введите название породы" list="breedList" />
+          <datalist id="breedList"></datalist>
         </div>
         <div class="control-group">
           <label for="countrySelect" id="countryLabel">Страна</label>
