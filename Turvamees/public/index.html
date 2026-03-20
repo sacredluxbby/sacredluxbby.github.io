@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turvamees - Liikumise HeliAlarm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;700&family=Manrope:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="topbar-row">
+        <div>
+          <h1>Turvamees</h1>
+          <p>Kaamerapõhine liikumise tuvastus ja helisignaalid</p>
+        </div>
+        <div class="topbar-controls">
+          <label class="theme-picker" for="themeSelect">
+            Theme
+            <select id="themeSelect" aria-label="Theme selection">
+              <option value="neon-purple">Neon Purple</option>
+              <option value="blue-night">Blue Night</option>
+              <option value="pink-pulse">Pink Pulse</option>
+            </select>
+          </label>
+          <label class="theme-picker" for="alarmModeSelect">
+            Alarm Mode
+            <select id="alarmModeSelect" aria-label="Alarm mode selection">
+              <option value="soft">Soft</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <section class="video-panel card">
+      <div class="video-wrap">
+        <video id="camera" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="actions">
+        <button id="startBtn" class="btn">Luba kaamera</button>
+        <button id="stopBtn" class="btn ghost" disabled>Peata</button>
+      </div>
+      <p id="status" class="status">Kaamera ei ole aktiivne.</p>
+    </section>
+
+    <section class="signals card">
+      <h2>Tuvastatud liikumine</h2>
+      <div class="movement-grid" id="movementGrid"></div>
+    </section>
+  </main>
+
+  <aside class="hotkey-hints" aria-label="Klahviabi">
+    <span><strong>M</strong> - mute</span>
+    <span><strong>C</strong> - snapshot</span>
+    <span><strong>T</strong> - theme</span>
+    <span><strong>A</strong> - alarm mode</span>
+    <span><strong>↑</strong>/<strong>↓</strong> - reaktsiooni kiirus</span>
+    <span><strong>←</strong>/<strong>→</strong> - zoom</span>
+    <span><strong>0</strong> - reset</span>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
