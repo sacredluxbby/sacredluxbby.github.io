@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 620" role="img" aria-label="Крутой кот в аксессуарах полный рост">
+  <ellipse cx="210" cy="542" rx="104" ry="26" fill="#00000025"/>
+  <path d="M274 512 q62 4 70 -45 q8 -41 -22 -66 q-23 -18 -46 -14" fill="none" stroke="#e29a53" stroke-width="23" stroke-linecap="round"/>
+  <ellipse cx="210" cy="348" rx="112" ry="158" fill="#ffc57e"/>
+  <ellipse cx="210" cy="388" rx="55" ry="86" fill="#ffe1bc"/>
+
+  <ellipse cx="210" cy="174" rx="104" ry="100" fill="#ffc57e"/>
+  <polygon points="124,129 154,58 183,139" fill="#ffc57e"/>
+  <polygon points="237,139 266,58 296,129" fill="#ffc57e"/>
+  <polygon points="145,123 160,89 175,126" fill="#ffacbe"/>
+  <polygon points="248,126 263,89 278,123" fill="#ffacbe"/>
+
+  <rect x="156" y="163" width="42" height="20" rx="8" fill="#2d2d33"/>
+  <rect x="222" y="163" width="42" height="20" rx="8" fill="#2d2d33"/>
+  <rect x="198" y="169" width="24" height="8" rx="4" fill="#2d2d33"/>
+
+  <ellipse cx="210" cy="212" rx="10" ry="8" fill="#ef8d8d"/>
+  <path d="M188 227 q22 22 44 0" fill="none" stroke="#2d2823" stroke-width="5" stroke-linecap="round"/>
+  <path d="M132 212 h48 M132 224 h48 M132 236 h44" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+  <path d="M288 212 h-48 M288 224 h-48 M288 236 h44" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+
+  <ellipse cx="151" cy="473" rx="32" ry="60" fill="#ffc57e"/>
+  <ellipse cx="269" cy="473" rx="32" ry="60" fill="#ffc57e"/>
+  <ellipse cx="151" cy="528" rx="32" ry="18" fill="#e29a53"/>
+  <ellipse cx="269" cy="528" rx="32" ry="18" fill="#e29a53"/>
+
+  <rect x="160" y="258" width="100" height="20" rx="10" fill="#2d2d33"/>
+  <polygon points="210,242 217,257 234,259 221,271 224,288 210,279 196,288 199,271 186,259 203,257" fill="#ffd84f"/>
+</svg>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Симулятор кота</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="title-wrap">
+      <h1>Симулятор кота</h1>
+      <p>Вырастите своего пушистого героя от котенка до легенды</p>
+    </header>
+
+    <section id="setup" class="card setup-card">
+      <h2>Первый запуск</h2>
+      <p>Введите имя своего кота, чтобы начать игру.</p>
+      <form id="start-form" class="setup-form">
+        <input id="cat-name" type="text" maxlength="24" placeholder="Например: Барсик" required />
+        <button type="submit">Начать</button>
+      </form>
+      <p id="setup-error" class="error hidden"></p>
+    </section>
+
+    <section id="game" class="game-layout hidden">
+      <div class="game-header">
+        <div class="header-left">
+          <h2 id="cat-title">Кот</h2>
+          <p id="level-name" class="level-name">Котенок</p>
+        </div>
+        <button id="settings-btn" type="button" class="settings-icon-btn" aria-label="Настройки">⚙️</button>
+      </div>
+
+      <div class="game-main">
+        <div class="cat-room-large">
+          <div class="room-scene" id="room-scene">
+            <div class="wall-decor"></div>
+            <div id="sleep-overlay" class="sleep-overlay hidden"></div>
+            <div id="cat-accessory" class="cat-accessory hidden"></div>
+            <img id="cat-image" src="" alt="Кот" />
+            <div class="floor-line"></div>
+          </div>
+        </div>
+
+        <div class="status-panel-compact">
+          <h3>Состояние</h3>
+
+          <div class="stats">
+            <div class="stat-item">
+              <label>Сытость</label>
+              <div class="bar"><span id="fullness-bar"></span></div>
+              <small id="fullness-value">0</small>
+            </div>
+            <div class="stat-item">
+              <label>Радость</label>
+              <div class="bar"><span id="happiness-bar"></span></div>
+              <small id="happiness-value">0</small>
+            </div>
+            <div class="stat-item">
+              <label>Энергия</label>
+              <div class="bar"><span id="energy-bar"></span></div>
+              <small id="energy-value">0</small>
+            </div>
+          </div>
+
+          <p id="progress-text" class="progress-text"></p>
+        </div>
+      </div>
+
+      <div class="game-footer">
+        <div class="room-nav" aria-label="Перемещение по комнатам">
+          <button id="move-left" type="button" class="arrow-btn" aria-label="Комната слева">◀</button>
+          <p id="room-name" class="room-name">Кухня</p>
+          <button id="move-right" type="button" class="arrow-btn" aria-label="Комната справа">▶</button>
+        </div>
+
+        <div class="actions-container">
+          <div id="actions" class="actions"></div>
+        </div>
+      </div>
+
+      <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Настройки</h2>
+            <button id="close-settings" type="button" class="close-btn" aria-label="Закрыть">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="settings-group">
+              <label for="language-select">Язык:</label>
+              <select id="language-select">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+                <option value="et">Eesti</option>
+              </select>
+            </div>
+
+            <div class="settings-group">
+              <label for="volume-slider">Громкость:</label>
+              <input id="volume-slider" type="range" min="0" max="100" value="50" />
+              <span id="volume-value">50%</span>
+            </div>
+
+            <button id="modal-reset-btn" type="button" class="danger-btn full-width">Сбросить прогресс</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 620" role="img" aria-label="Sleeping cat">
+  <ellipse cx="210" cy="545" rx="100" ry="20" fill="#00000022"/>
+  <ellipse cx="210" cy="430" rx="130" ry="78" fill="#ffd19a"/>
+  <ellipse cx="165" cy="410" rx="48" ry="36" fill="#ffe2b6"/>
+  <ellipse cx="255" cy="410" rx="48" ry="36" fill="#ffe2b6"/>
+  <ellipse cx="210" cy="342" rx="88" ry="78" fill="#ffd19a"/>
+  <path d="M120 360 C78 355 72 300 118 283" fill="none" stroke="#f2b26f" stroke-width="16" stroke-linecap="round"/>
+  <path d="M153 289 L174 235 L195 286 Z" fill="#ffd19a"/>
+  <path d="M267 289 L246 235 L225 286 Z" fill="#ffd19a"/>
+  <path d="M170 336 Q184 352 198 336" stroke="#6d4a38" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M222 336 Q236 352 250 336" stroke="#6d4a38" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="210" cy="352" rx="11" ry="8" fill="#f58ca4"/>
+  <path d="M210 360 Q208 376 194 383" stroke="#7c5642" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M210 360 Q212 376 226 383" stroke="#7c5642" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <text x="278" y="290" font-size="30" fill="#6d4a38" font-family="Arial, sans-serif">Z</text>
+  <text x="310" y="260" font-size="22" fill="#6d4a38" font-family="Arial, sans-serif">Z</text>
+</svg>

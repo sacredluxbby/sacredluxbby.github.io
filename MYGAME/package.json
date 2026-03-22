@@ -1,0 +1,19 @@
+{
+  "name": "cat-simulator",
+  "version": "1.0.0",
+  "description": "Простой веб-проект \"Симулятор кота\" на Node.js + Express",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "cat",
+    "simulator",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

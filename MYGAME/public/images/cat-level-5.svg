@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 620" role="img" aria-label="Легендарный кот полный рост">
+  <ellipse cx="210" cy="542" rx="108" ry="27" fill="#00000028"/>
+  <path d="M277 512 q64 5 74 -44 q8 -43 -23 -68 q-24 -18 -48 -14" fill="none" stroke="#de954f" stroke-width="24" stroke-linecap="round"/>
+  <ellipse cx="210" cy="345" rx="116" ry="162" fill="#ffc174"/>
+  <ellipse cx="210" cy="389" rx="58" ry="88" fill="#ffe0b7"/>
+
+  <ellipse cx="210" cy="168" rx="108" ry="104" fill="#ffc174"/>
+  <polygon points="121,124 153,50 184,133" fill="#ffc174"/>
+  <polygon points="236,133 267,50 299,124" fill="#ffc174"/>
+  <polygon points="143,118 159,84 176,122" fill="#ffabbc"/>
+  <polygon points="249,122 266,84 282,118" fill="#ffabbc"/>
+
+  <circle cx="168" cy="172" r="10" fill="#2a241f"/>
+  <circle cx="252" cy="172" r="10" fill="#2a241f"/>
+  <ellipse cx="210" cy="206" rx="10" ry="8" fill="#ef8d8d"/>
+  <path d="M186 221 q24 24 48 0" fill="none" stroke="#2a241f" stroke-width="5" stroke-linecap="round"/>
+  <path d="M126 206 h50 M126 218 h50 M126 230 h46" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+  <path d="M294 206 h-50 M294 218 h-50 M294 230 h46" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+
+  <ellipse cx="149" cy="474" rx="33" ry="62" fill="#ffc174"/>
+  <ellipse cx="271" cy="474" rx="33" ry="62" fill="#ffc174"/>
+  <ellipse cx="149" cy="531" rx="33" ry="19" fill="#de954f"/>
+  <ellipse cx="271" cy="531" rx="33" ry="19" fill="#de954f"/>
+
+  <polygon points="210,40 220,65 248,67 227,84 232,112 210,97 188,112 193,84 172,67 200,65" fill="#ffd84f"/>
+  <rect x="160" y="254" width="100" height="22" rx="11" fill="#aa6a00"/>
+  <circle cx="184" cy="265" r="7" fill="#ffd84f"/>
+  <circle cx="236" cy="265" r="7" fill="#ffd84f"/>
+  <polygon points="210,240 216,252 230,253 219,262 222,276 210,269 198,276 201,262 190,253 204,252" fill="#ffe476"/>
+</svg>

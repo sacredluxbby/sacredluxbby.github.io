@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 620" role="img" aria-label="Котенок полный рост">
+  <ellipse cx="210" cy="540" rx="92" ry="24" fill="#00000022"/>
+  <path d="M255 510 q55 6 65 -44 q6 -38 -20 -64 q-19 -16 -41 -13" fill="none" stroke="#f2b26f" stroke-width="20" stroke-linecap="round"/>
+  <ellipse cx="210" cy="362" rx="98" ry="142" fill="#ffd19a"/>
+  <ellipse cx="210" cy="390" rx="46" ry="72" fill="#ffe7c9"/>
+
+  <ellipse cx="210" cy="196" rx="92" ry="86" fill="#ffd19a"/>
+  <polygon points="136,146 162,82 183,154" fill="#ffd19a"/>
+  <polygon points="237,154 258,82 284,146" fill="#ffd19a"/>
+  <polygon points="150,140 163,107 175,143" fill="#ffb6c1"/>
+  <polygon points="245,143 257,107 270,140" fill="#ffb6c1"/>
+
+  <circle cx="176" cy="196" r="10" fill="#2f2b25"/>
+  <circle cx="244" cy="196" r="10" fill="#2f2b25"/>
+  <ellipse cx="210" cy="226" rx="10" ry="8" fill="#ef8d8d"/>
+  <path d="M192 242 q18 18 36 0" fill="none" stroke="#2f2b25" stroke-width="5" stroke-linecap="round"/>
+  <path d="M143 226 h44 M143 238 h44 M143 250 h40" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+  <path d="M277 226 h-44 M277 238 h-44 M277 250 h-40" stroke="#7f6f63" stroke-width="4" stroke-linecap="round"/>
+
+  <ellipse cx="156" cy="468" rx="30" ry="56" fill="#ffd19a"/>
+  <ellipse cx="264" cy="468" rx="30" ry="56" fill="#ffd19a"/>
+  <ellipse cx="156" cy="520" rx="30" ry="18" fill="#f2b26f"/>
+  <ellipse cx="264" cy="520" rx="30" ry="18" fill="#f2b26f"/>
+</svg>
