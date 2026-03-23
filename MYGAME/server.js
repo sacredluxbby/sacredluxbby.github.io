@@ -13,12 +13,12 @@ const ROOMS = [
   {
     key: "yard",
     name: "Двор",
-    allowedActions: ["pet", "sleep", "play", "train", "adventure"]
+    allowedActions: ["pet", "play", "train", "adventure"]
   },
   {
     key: "kitchen",
     name: "Кухня",
-    allowedActions: ["pet", "sleep", "feed_treat", "feed_cookie", "feed_drumstick"]
+    allowedActions: ["pet", "feed_treat", "feed_cookie", "feed_drumstick"]
   },
   {
     key: "bedroom",
@@ -36,6 +36,14 @@ const LEVELS = [
   { level: 5, name: "Легендарный кот", minProgress: 340 }
 ];
 
+const LEVEL_CAT_IMAGES = {
+  1: "/кот лвл 1.svg",
+  2: "/кот лвл 2.svg",
+  3: "/кот лвл 3.svg",
+  4: "/кот лвл 4.svg",
+  5: "/кот лвл 5.svg"
+};
+
 const ACTIONS = {
   pet: {
     label: "Погладить",
@@ -50,9 +58,9 @@ const ACTIONS = {
     label: "Рыбка-вкусняшка",
     minLevel: 1,
     apply: (state) => {
-      state.fullness = MAX_STAT;
-      state.happiness = MAX_STAT;
-      state.energy = clamp(state.energy - 50, 0, MAX_STAT);
+      state.fullness = clamp(state.fullness + 18, 0, MAX_STAT);
+      state.happiness = clamp(state.happiness + 14, 0, MAX_STAT);
+      state.energy = clamp(state.energy - 12, 0, MAX_STAT);
       state.totalProgress += 14;
     }
   },
@@ -90,7 +98,7 @@ const ACTIONS = {
     label: "Спать",
     minLevel: 1,
     apply: (state) => {
-      state.energy = clamp(state.energy + 22, 0, MAX_STAT);
+      state.energy = clamp(state.energy + 12, 0, MAX_STAT);
       state.totalProgress += 10;
     }
   },
@@ -158,6 +166,10 @@ function getLevelName(level) {
   return found ? found.name : "Кот";
 }
 
+function getLevelCatImage(level) {
+  return LEVEL_CAT_IMAGES[level] || LEVEL_CAT_IMAGES[1];
+}
+
 function getUnlockedActions(level) {
   const result = [];
 
@@ -210,7 +222,7 @@ function withComputedFields(state) {
     level,
     levelName: getLevelName(level),
     averageMood: avg,
-    catImage: `/images/cat-level-${level}.svg`,
+    catImage: getLevelCatImage(level),
     currentRoom: room.key,
     currentRoomName: room.name,
     rooms: ROOMS.map((roomItem) => ({

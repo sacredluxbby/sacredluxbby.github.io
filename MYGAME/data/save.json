@@ -1,9 +1,9 @@
 {
-  "catName": "Barsik",
-  "fullness": 100,
-  "happiness": 100,
-  "energy": 88,
-  "totalProgress": 385,
-  "lastUpdated": 1774209405212,
+  "catName": "Барсик",
+  "fullness": 70,
+  "happiness": 70,
+  "energy": 70,
+  "totalProgress": 0,
+  "lastUpdated": 1774267720453,
   "currentRoom": "bedroom"
 }
