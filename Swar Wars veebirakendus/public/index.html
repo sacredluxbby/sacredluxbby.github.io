@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Wars Universe Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="title" id="pageTitle">Star Wars Universe</h1>
+            <p class="subtitle" id="pageSubtitle">Explore multiple categories from Star Wars Databank</p>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <section class="controls-shell">
+                <div class="controls-header">
+                    <h2 class="controls-heading" id="controlsHeading">Control Deck</h2>
+                    <button
+                        id="controlsToggle"
+                        class="controls-toggle"
+                        aria-expanded="false"
+                        aria-controls="controlsPanel"
+                        aria-label="Open controls"
+                    >
+                        ▾
+                    </button>
+                </div>
+                <div id="controlsPanel" class="controls-panel">
+                    <section class="controls" aria-label="Explorer controls">
+                        <input
+                            id="searchInput"
+                            class="search-input"
+                            type="search"
+                            placeholder="Search by name or description..."
+                            aria-label="Search cards"
+                        >
+                        <select id="sortSelect" class="select-input" aria-label="Sort cards">
+                            <option id="sortDefaultOption" value="default">Default order</option>
+                            <option id="sortAzOption" value="az">Name A-Z</option>
+                            <option id="sortZaOption" value="za">Name Z-A</option>
+                        </select>
+                        <label class="favorite-toggle" for="favoritesOnly">
+                            <input id="favoritesOnly" type="checkbox">
+                            <span id="favoritesOnlyLabel">Favorites only</span>
+                        </label>
+                        <button id="randomBtn" class="control-btn">Force Pick</button>
+                        <button id="refreshBtn" class="control-btn control-btn-secondary">Refresh</button>
+                        <button id="languageBtn" class="control-btn control-btn-secondary">Language: EN</button>
+                    </section>
+                </div>
+            </section>
+
+            <div class="loading" id="loading">Loading...</div>
+            <div class="error" id="error"></div>
+            <div class="categories-container" id="categoriesContainer"></div>
+        </div>
+    </main>
+
+    <div id="detailsModal" class="modal" aria-hidden="true" role="dialog" aria-label="Card details">
+        <div class="modal-content">
+            <button id="modalClose" class="modal-close" aria-label="Close details">×</button>
+            <img id="modalImage" class="modal-image" src="" alt="Card image">
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <p id="modalDescription" class="modal-description"></p>
+            <button id="copyDescriptionBtn" class="control-btn">Copy description</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <footer class="footer">
+        <p id="footerText">&copy; 2026 Star Wars Universe Explorer | Powered by Star Wars Databank API</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
