@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo to Music</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.0.4/Tone.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="background-glow" aria-hidden="true"></div>
+    <main class="app-shell">
+      <section class="panel left-panel">
+        <div class="headline-row">
+          <h1>Paint Your Sound</h1>
+          <button id="themeToggle" type="button" class="theme-toggle" aria-pressed="false">Light-Glass</button>
+        </div>
+        <p class="subtitle">Upload a photo. The app extracts colors and objects and turns them into a one-of-a-kind track.</p>
+
+        <form id="uploadForm" class="upload-form">
+          <label class="file-picker">
+            <input type="file" name="photo" id="photoInput" accept="image/*,.heic,.heif,.webp,.avif,.tiff,.tif,.bmp,.gif,.jpg,.jpeg,.png" required />
+            <span>Select Photo</span>
+          </label>
+          <button type="submit" id="generateBtn">Generate Music</button>
+        </form>
+
+        <details class="mood-picker" id="moodPicker">
+          <summary id="moodSummary" class="mood-summary">Mood: Auto (from image)</summary>
+          <div class="mood-options">
+            <button type="button" class="mood-option active" data-mood="auto">Auto</button>
+            <button type="button" class="mood-option" data-mood="calm">Calm (Major)</button>
+            <button type="button" class="mood-option" data-mood="sad">Sad (Minor)</button>
+            <button type="button" class="mood-option" data-mood="meme">Happy Meme (Major)</button>
+          </div>
+        </details>
+
+        <div class="controls">
+          <button id="playBtn" disabled>Play</button>
+          <button id="stopBtn" disabled>Stop</button>
+        </div>
+
+        <p id="status" class="status">Waiting for image...</p>
+
+        <div class="speed-section">
+          <div class="speed-buttons">
+            <button id="speedUpBtn" disabled>Speedup</button>
+            <button id="slowedBtn" disabled>Slowed</button>
+          </div>
+          <label class="speed-label" for="speedSlider">Speed: <span id="speedValue">1.00x</span></label>
+          <input id="speedSlider" type="range" min="0.6" max="1.8" step="0.05" value="1" disabled />
+        </div>
+
+        <div class="fx-section">
+          <p class="fx-title">Music Functions</p>
+          <div class="fx-grid">
+            <button type="button" class="fx-btn" data-fx="reverb" disabled>Reverb</button>
+            <button type="button" class="fx-btn" data-fx="echo" disabled>Echo</button>
+            <button type="button" class="fx-btn" data-fx="bassBoost" disabled>Bass Boost</button>
+            <button type="button" class="fx-btn" data-fx="swing" disabled>Swing</button>
+            <button type="button" class="fx-btn" data-fx="stutter" disabled>Stutter</button>
+            <button type="button" class="fx-btn" data-fx="arpeggio" disabled>Arpeggio</button>
+            <button type="button" class="fx-btn" data-fx="octaveUp" disabled>Octave Up</button>
+            <button type="button" class="fx-btn" data-fx="lofi" disabled>Lo-Fi</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel right-panel">
+        <div class="preview-wrap">
+          <p id="previewHint" class="preview-hint">Selected image will appear here</p>
+          <img id="previewImage" alt="Uploaded preview" />
+        </div>
+
+        <div class="analysis-block">
+          <h2>Color Palette</h2>
+          <div id="palette" class="palette"></div>
+        </div>
+
+        <div class="analysis-block">
+          <h2>Detected Objects</h2>
+          <div id="objects" class="chips"></div>
+        </div>
+
+        <div class="analysis-block">
+          <h2>Track DNA</h2>
+          <div id="musicMeta" class="meta-grid"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
