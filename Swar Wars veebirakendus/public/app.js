@@ -40,6 +40,8 @@ const TRANSLATIONS = {
         pageTitle: 'Star Wars Universe',
         pageSubtitle: 'Explore multiple categories from Star Wars Databank',
         searchPlaceholder: 'Search by name or description...',
+        categoryFilterLabel: 'Category filter',
+        categoryFilterAll: 'All categories',
         sortAria: 'Sort cards',
         sortDefault: 'Default order',
         sortAz: 'Name A-Z',
@@ -85,6 +87,8 @@ const TRANSLATIONS = {
         pageTitle: '⭐ Вселенная Star Wars',
         pageSubtitle: 'Изучайте несколько категорий из Star Wars Databank',
         searchPlaceholder: 'Поиск по имени или описанию...',
+        categoryFilterLabel: 'Фильтр категорий',
+        categoryFilterAll: 'Все категории',
         sortAria: 'Сортировка карточек',
         sortDefault: 'По умолчанию',
         sortAz: 'Имя А-Я',
@@ -130,6 +134,8 @@ const TRANSLATIONS = {
         pageTitle: '⭐ Star Warsi universum',
         pageSubtitle: 'Avasta Star Wars Databanki mitut kategooriat',
         searchPlaceholder: 'Otsi nime või kirjelduse järgi...',
+        categoryFilterLabel: 'Kategooriafilter',
+        categoryFilterAll: 'Kõik kategooriad',
         sortAria: 'Kaartide sortimine',
         sortDefault: 'Vaikimisi järjekord',
         sortAz: 'Nimi A-Z',
@@ -183,6 +189,7 @@ const categoriesContainer = document.getElementById('categoriesContainer');
 const loading = document.getElementById('loading');
 const error = document.getElementById('error');
 const searchInput = document.getElementById('searchInput');
+const categoryFilters = document.getElementById('categoryFilters');
 const sortSelect = document.getElementById('sortSelect');
 const sortDefaultOption = document.getElementById('sortDefaultOption');
 const sortAzOption = document.getElementById('sortAzOption');
@@ -208,6 +215,7 @@ const state = {
     favorites: new Set(loadFavorites()),
     datasets: {},
     language: loadLanguage(),
+    activeCategory: 'all',
     modalItem: null,
     controlsOpen: false
 };
@@ -237,6 +245,7 @@ function updateStaticTexts() {
     controlsHeading.textContent = t('controlsHeading');
     searchInput.placeholder = t('searchPlaceholder');
     searchInput.setAttribute('aria-label', t('searchPlaceholder'));
+    categoryFilters.setAttribute('aria-label', t('categoryFilterLabel'));
     sortSelect.setAttribute('aria-label', t('sortAria'));
     sortDefaultOption.textContent = t('sortDefault');
     sortAzOption.textContent = t('sortAz');
@@ -251,10 +260,47 @@ function updateStaticTexts() {
     detailsModal.setAttribute('aria-label', t('details'));
     footerText.textContent = t('footer');
     updateControlsToggleUI();
+    renderCategoryFilters();
 
     if (state.modalItem) {
         renderModalContent(state.modalItem);
     }
+}
+
+function renderCategoryFilters() {
+    if (!categoryFilters) {
+        return;
+    }
+
+    const options = [
+        { key: 'all', icon: '✨', label: t('categoryFilterAll') },
+        ...CATEGORIES.map((category) => ({
+            key: category.key,
+            icon: category.icon,
+            label: getCategoryTitle(category.key)
+        }))
+    ];
+
+    categoryFilters.innerHTML = '';
+    options.forEach((option) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `category-chip ${state.activeCategory === option.key ? 'active' : ''}`;
+        button.textContent = `${option.icon} ${option.label}`;
+        button.setAttribute('aria-pressed', String(state.activeCategory === option.key));
+
+        button.addEventListener('click', () => {
+            if (state.activeCategory === option.key) {
+                return;
+            }
+
+            state.activeCategory = option.key;
+            renderCategoryFilters();
+            renderCategories();
+        });
+
+        categoryFilters.appendChild(button);
+    });
 }
 
 function updateControlsToggleUI() {
@@ -364,7 +410,11 @@ function extractItems(payload) {
 function renderCategories() {
     categoriesContainer.innerHTML = '';
 
-    CATEGORIES.forEach((category) => {
+    const visibleCategories = state.activeCategory === 'all'
+        ? CATEGORIES
+        : CATEGORIES.filter((category) => category.key === state.activeCategory);
+
+    visibleCategories.forEach((category) => {
         const sourceItems = state.datasets[category.key] || [];
         const preparedItems = prepareItems(sourceItems, category.key);
         const filteredItems = filterItems(preparedItems);
