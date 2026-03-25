@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meme Forge AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="background-glow"></div>
+    <main class="app-shell">
+      <section class="hero-card">
+        <p class="eyebrow">NODE.JS + AI</p>
+        <h1 id="titleText">Meme Forge AI</h1>
+        <p class="subtitle" id="subtitleText">
+          Загрузи любое изображение, и ИИ придумает мемную подпись и вернет готовую
+          картинку.
+        </p>
+
+        <form id="memeForm" class="upload-form">
+          <label class="file-label" id="fileLabelText" for="imageInput">Выбрать картинку</label>
+          <input id="imageInput" name="image" type="file" accept="image/*" required />
+
+          <div class="control-grid">
+            <label class="select-wrap" for="languageSelect">
+              <span id="langLabelText">Язык мема</span>
+              <select id="languageSelect" name="language">
+                <option value="ru" selected>Русский</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+
+            <label class="select-wrap" for="styleSelect">
+              <span id="styleLabelText">Стиль юмора</span>
+              <select id="styleSelect" name="style">
+                <option id="styleClassicText" value="classic" selected>Классика</option>
+                <option id="styleSarcasticText" value="sarcastic">Саркастичный</option>
+                <option id="styleAbsurdText" value="absurd">Абсурдный</option>
+                <option id="styleWholesomeText" value="wholesome">Добрый</option>
+              </select>
+            </label>
+          </div>
+
+          <button id="generateBtn" type="submit">Сгенерировать мем</button>
+        </form>
+
+        <p id="statusText" class="status-text">Ожидаю загрузку изображения.</p>
+      </section>
+
+      <section class="result-card" id="resultCard">
+        <div class="result-header">
+          <h2>Результат</h2>
+          <span id="captionSource" class="tag"></span>
+        </div>
+        <img id="resultImage" alt="Сгенерированный мем" />
+        <div class="caption-preview">
+          <p id="topCaption"></p>
+          <p id="bottomCaption"></p>
+        </div>
+        <a id="downloadBtn" class="download-btn" href="#" download="meme.jpg">Скачать мем</a>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

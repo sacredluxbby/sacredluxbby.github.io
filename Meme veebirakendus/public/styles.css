@@ -1,0 +1,258 @@
+:root {
+  --ui-scale: 1.35;
+  --bg-main: #edf2ef;
+  --bg-accent: #d8e7e1;
+  --bg-orb-a: #f8fbf9;
+  --bg-orb-b: #d1e3dc;
+  --glow-a: #1f7a68;
+  --glow-b: #8fb8ab;
+  --glow-c: #c9ddd6;
+  --ink: #1f2a27;
+  --orange: #1f7a68;
+  --deep: #125547;
+  --card: rgba(255, 255, 255, 0.82);
+  --border: rgba(22, 62, 54, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
+  background:
+    radial-gradient(circle at 20% 10%, var(--bg-orb-a) 0%, transparent 28%),
+    radial-gradient(circle at 85% 85%, var(--bg-orb-b) 0%, transparent 30%),
+    linear-gradient(130deg, var(--bg-main), var(--bg-accent));
+  overflow-x: hidden;
+}
+
+.background-glow {
+  position: fixed;
+  inset: -200px;
+  background:
+    conic-gradient(from 90deg at 30% 50%, var(--glow-a), var(--glow-b), var(--glow-c), var(--glow-a));
+  opacity: 0.2;
+  filter: blur(120px);
+  z-index: -1;
+  animation: spin 18s linear infinite;
+}
+
+.app-shell {
+  width: min(1440px, 97vw);
+  margin: calc(40px * var(--ui-scale)) auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(20px * var(--ui-scale));
+}
+
+.hero-card,
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(24px * var(--ui-scale));
+  padding: calc(28px * var(--ui-scale));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+}
+
+.eyebrow {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--deep);
+}
+
+h1,
+h2 {
+  margin: 8px 0 12px;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  font-size: clamp(2.9rem, 10vw, 5.6rem);
+  line-height: 0.9;
+}
+
+h2 {
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  line-height: 1.5;
+  font-size: 1.15rem;
+}
+
+.upload-form {
+  display: grid;
+  gap: calc(12px * var(--ui-scale));
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(12px * var(--ui-scale));
+}
+
+.select-wrap {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 62, 54, 0.3);
+  background: rgba(250, 255, 253, 0.82);
+  font: inherit;
+}
+
+.file-label {
+  display: inline-block;
+  font-weight: 700;
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: calc(12px * var(--ui-scale));
+  border: 1px dashed rgba(22, 62, 54, 0.36);
+  border-radius: calc(14px * var(--ui-scale));
+  background: rgba(248, 255, 252, 0.72);
+}
+
+button {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: calc(14px * var(--ui-scale)) calc(18px * var(--ui-scale));
+  background: linear-gradient(110deg, var(--orange), #2f9b83);
+  color: white;
+  font-weight: 800;
+  font-size: 1.02rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px) scale(1.01);
+  filter: brightness(1.05);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-text {
+  margin-top: calc(16px * var(--ui-scale));
+  font-size: 1.05rem;
+  min-height: 1.3em;
+}
+
+.result-card {
+  display: none;
+}
+
+.result-card.show {
+  display: block;
+  animation: rise 0.5s ease;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tag {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: calc(6px * var(--ui-scale)) calc(10px * var(--ui-scale));
+  background: rgba(18, 85, 71, 0.14);
+}
+
+#resultImage {
+  width: 100%;
+  border-radius: calc(18px * var(--ui-scale));
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.caption-preview {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.caption-preview p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.download-btn {
+  margin-top: calc(14px * var(--ui-scale));
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: calc(10px * var(--ui-scale)) calc(16px * var(--ui-scale));
+  color: white;
+  background: linear-gradient(110deg, #145f51, #2b8d78);
+  font-weight: 800;
+  font-size: 1.02rem;
+}
+
+.download-btn:hover {
+  filter: brightness(1.08);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --ui-scale: 1.2;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    margin: 24px auto 34px;
+  }
+
+  .control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card,
+  .result-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+}
